@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FilterContext.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PwnFilter</a> &gt; <a href="index.source.html" class="el_package">com.pwn9.filter.engine.api</a> &gt; <span class="el_source">FilterContext.java</span></div><h1>FilterContext.java</h1><pre class="source lang-java linenums">/*
+ *  PwnFilter - Chat and user-input filter with the power of Regex
+ *  Copyright (C) 2016 Pwn9.com / Sage905 &lt;sage905@takeflight.ca&gt;
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+ *
+ *
+ */
+
+package com.pwn9.filter.engine.api;
+
+import com.pwn9.filter.engine.rules.Rule;
+import com.pwn9.filter.util.SimpleString;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
+
+/**
+ * @author Sage905
+ *
+ * A FilterContext is passed to the FilterService with the message, author, and
+ * a reference to the calling client.
+ *
+ * Rules will be applied to the message, and actions may be taken on the author.
+ *
+ * At the end of processing, the client is responsible for taking actions such
+ * as cancelling the original event, forwarding the modified message, etc.
+ *
+ */
+public class FilterContext {
+    private final EnhancedString originalMessage; // Original message
+    private final MessageAuthor author; // Author that this event is connected to.
+    private final FilterClient filterClient;
+<span class="fc" id="L49">    private final List&lt;String&gt; logMessages = new ArrayList&lt;&gt;(); // Rules can add strings to this array.  They will be output to log if log=true</span>
+<span class="fc" id="L50">    private final List&lt;Rule&gt; matchedRules = new ArrayList&lt;&gt;(); // An array containing all the rules we matched.</span>
+<span class="fc" id="L51">    private final ConcurrentHashMap&lt;String, String&gt; notifyMessages = new ConcurrentHashMap&lt;&gt;(8, 0.9f, 1);</span>
+    private EnhancedString modifiedMessage; // Modified message string
+<span class="fc" id="L53">    private boolean logging = false;  // If true, actions will be logged</span>
+<span class="fc" id="L54">    private boolean aborted = false; // If set true by a rule, will stop further processing.</span>
+<span class="fc" id="L55">    private boolean cancelled = false; // If set true, will cancel this event.</span>
+    private Rule rule; // Rule we currently match
+    private Pattern pattern; // Pattern that we currently matched.
+
+    /**
+     * FilterContext Constructor
+     *
+     * @param originalMessage An {@link EnhancedString} object to run rules against.
+     * @param author The {@link MessageAuthor} to perform rule actions on.
+     * @param filterClient The {@link FilterClient} source of this message.
+     */
+    public FilterContext(EnhancedString originalMessage, MessageAuthor author,
+<span class="fc" id="L67">                         FilterClient filterClient) {</span>
+<span class="fc" id="L68">        this.originalMessage = originalMessage;</span>
+<span class="fc" id="L69">        modifiedMessage = originalMessage;</span>
+<span class="fc" id="L70">        this.author = author;</span>
+<span class="fc" id="L71">        this.filterClient = filterClient;</span>
+<span class="fc" id="L72">    }</span>
+
+    /**
+     * A convenience Constructor that wraps a plain String into an
+     * {@link EnhancedString} object.
+     * @param originalString A plain {@link String} to apply rules to.
+     * @param author The {@link MessageAuthor} to perform rule actions on.
+     * @param filterClient The {@link FilterClient} source of this message.
+     */
+    public FilterContext(String originalString, MessageAuthor author,
+                         FilterClient filterClient) {
+<span class="fc" id="L83">        this(new SimpleString(originalString), author, filterClient);</span>
+<span class="fc" id="L84">    }</span>
+
+    /**
+     * Add a string to the list of log messages that will be written to the
+     * logfile / console.
+     *
+     * These messages will only be output if the rule has the &quot;then log&quot; action,
+     * or if debug &amp;gt;= low in the comfig.yml
+     *
+     * @param message Log message to add
+     */
+    public void addLogMessage(String message) {
+<span class="fc" id="L96">        logMessages.add(message);</span>
+<span class="fc" id="L97">    }</span>
+
+    public List&lt;String&gt; getLogMessages() {
+<span class="fc" id="L100">        return logMessages;</span>
+    }
+
+    /**
+     * &lt;p&gt;messageChanged.&lt;/p&gt;
+     *
+     * @return true if the modified message is different than the original.
+     */
+    public boolean messageChanged() {
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        return !originalMessage.equals(modifiedMessage);</span>
+    }
+
+    public MessageAuthor getAuthor() {
+<span class="fc" id="L113">        return author;</span>
+    }
+
+    public boolean isCancelled() {
+<span class="fc" id="L117">        return cancelled;</span>
+    }
+
+    public void setCancelled() {
+<span class="fc" id="L121">        this.cancelled = true;</span>
+<span class="fc" id="L122">    }</span>
+
+    public EnhancedString getOriginalMessage() {
+<span class="fc" id="L125">        return originalMessage;</span>
+    }
+
+    public EnhancedString getModifiedMessage() {
+<span class="fc" id="L129">        return modifiedMessage;</span>
+    }
+
+    public void setModifiedMessage(EnhancedString newMessage) {
+<span class="fc" id="L133">        modifiedMessage = newMessage;</span>
+<span class="fc" id="L134">    }</span>
+
+    public boolean loggingOn() {
+<span class="fc" id="L137">        return logging;</span>
+    }
+
+    public void setLogging() {
+<span class="nc" id="L141">        this.logging = true;</span>
+<span class="nc" id="L142">    }</span>
+
+    public boolean isAborted() {
+<span class="fc" id="L145">        return aborted;</span>
+    }
+
+    public void setAborted() {
+<span class="fc" id="L149">        this.aborted = true;</span>
+<span class="fc" id="L150">    }</span>
+
+    public Rule getRule() {
+<span class="fc" id="L153">        return rule;</span>
+    }
+
+    public void setRule(Rule rule) {
+<span class="fc" id="L157">        this.rule = rule;</span>
+<span class="fc" id="L158">        matchedRules.add(rule);</span>
+<span class="fc" id="L159">    }</span>
+
+    public Pattern getPattern() {
+<span class="fc" id="L162">        return pattern;</span>
+    }
+
+    public void setPattern(Pattern pattern) {
+<span class="fc" id="L166">        this.pattern = pattern;</span>
+<span class="fc" id="L167">    }</span>
+
+    public List&lt;Rule&gt; getMatchedRules() {
+<span class="fc" id="L170">        return matchedRules;</span>
+    }
+
+    public FilterClient getFilterClient() {
+<span class="fc" id="L174">        return filterClient;</span>
+    }
+
+    public Map&lt;String, String&gt; getNotifyMessages() {
+<span class="fc" id="L178">        return Collections.unmodifiableMap(notifyMessages);</span>
+    }
+
+    public void setNotifyMessage(String perm, String message) {
+<span class="fc" id="L182">        notifyMessages.put(perm, message);</span>
+<span class="fc" id="L183">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

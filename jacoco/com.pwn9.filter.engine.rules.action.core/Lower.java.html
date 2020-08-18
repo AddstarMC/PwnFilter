@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Lower.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PwnFilter</a> &gt; <a href="index.source.html" class="el_package">com.pwn9.filter.engine.rules.action.core</a> &gt; <span class="el_source">Lower.java</span></div><h1>Lower.java</h1><pre class="source lang-java linenums">/*
+ *  PwnFilter - Chat and user-input filter with the power of Regex
+ *  Copyright (C) 2016 Pwn9.com / Sage905 &lt;sage905@takeflight.ca&gt;
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+ *
+ *
+ */
+
+package com.pwn9.filter.engine.rules.action.core;
+
+import com.pwn9.filter.engine.FilterService;
+import com.pwn9.filter.engine.api.Action;
+import com.pwn9.filter.engine.api.EnhancedString;
+import com.pwn9.filter.engine.api.FilterContext;
+
+/**
+ * Convert the matched text to lowercase.
+ * &lt;p&gt;
+ * Lower is a singleton, because it does not have any parameters and always
+ * performs the same action on a FilterContext.
+ *
+ * @author Sage905
+ * @version $Id: $Id
+ */
+
+<span class="fc" id="L38">enum Lower implements Action {</span>
+
+<span class="fc" id="L40">    INSTANCE;</span>
+
+    /**
+     * {@inheritDoc}
+     */
+    public void execute(final FilterContext filterTask, FilterService filterService) {
+<span class="fc" id="L46">        EnhancedString cs = filterTask.getModifiedMessage();</span>
+<span class="fc" id="L47">        filterTask.addLogMessage(&quot;Converting to lowercase.&quot;);</span>
+<span class="fc" id="L48">        filterTask.setModifiedMessage(cs.patternToLower(filterTask.getPattern()));</span>
+<span class="fc" id="L49">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

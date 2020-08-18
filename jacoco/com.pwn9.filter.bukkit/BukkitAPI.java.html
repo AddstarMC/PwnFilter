@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BukkitAPI.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PwnFilter</a> &gt; <a href="index.source.html" class="el_package">com.pwn9.filter.bukkit</a> &gt; <span class="el_source">BukkitAPI.java</span></div><h1>BukkitAPI.java</h1><pre class="source lang-java linenums">/*
+ *  PwnFilter - Chat and user-input filter with the power of Regex
+ *  Copyright (C) 2016 Pwn9.com / Sage905 &lt;sage905@takeflight.ca&gt;
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+ *
+ *
+ */
+
+package com.pwn9.filter.bukkit;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.pwn9.filter.engine.api.AuthorService;
+import com.pwn9.filter.engine.api.NotifyTarget;
+import com.pwn9.filter.minecraft.DeathMessages;
+import com.pwn9.filter.minecraft.api.MinecraftAPI;
+import com.pwn9.filter.minecraft.api.MinecraftConsole;
+import net.milkbowl.vault.economy.EconomyResponse;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.IllegalPluginAccessException;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.*;
+
+/**
+ * Handles keeping a cache of data that we need during Async event handling.
+ * We can't get this data in our Async method, as Bukkit API calls are not threadsafe.
+ * Also, we can't always schedule a task, because we might be running in the
+ * main thread.
+ * &lt;p/&gt;
+ * This will cache data about players for 10s.
+ */
+
+class BukkitAPI implements MinecraftAPI, AuthorService, NotifyTarget {
+
+    private final PwnFilterPlugin plugin;
+<span class="fc" id="L55">    private final MinecraftAPI playerAPI = this;</span>
+<span class="fc" id="L56">    private final Cache&lt;UUID, BukkitPlayer&gt; playerCache = CacheBuilder.newBuilder()</span>
+<span class="fc" id="L57">            .maximumSize(100)</span>
+<span class="fc" id="L58">            .build();</span>
+
+    /*
+    Note: The &quot;load&quot; call can cause blocking of the main Bukkit thread, if it is called
+    from the main thread while there is an outstanding request.
+     */
+
+<span class="fc" id="L65">    BukkitAPI(PwnFilterPlugin p) {</span>
+<span class="fc" id="L66">        plugin = p;</span>
+<span class="fc" id="L67">    }</span>
+
+    public BukkitPlayer getAuthorById(final UUID u) {
+        /* Not sure if this is the best way of doing this, but we need to make
+        certain that we do not block the main server thread while waiting for a
+        FutureTask in the same thread when the Cache loads a missing value.
+         */
+        BukkitPlayer bPlayer;
+<span class="fc" id="L75">        bPlayer = playerCache.getIfPresent(u);</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">        if (bPlayer == null) {</span>
+<span class="fc" id="L77">            Player onlinePlayer = safeBukkitAPICall(() -&gt; Bukkit.getPlayer(u));</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">            if (onlinePlayer != null) {</span>
+<span class="fc" id="L79">                playerCache.asMap().putIfAbsent(u, new BukkitPlayer(u, this));</span>
+            }
+        }
+        // At this point, the player should be in the cache if they are online.
+        // If player is offline, returns null
+<span class="fc" id="L84">        return playerCache.getIfPresent(u);</span>
+
+    }
+
+    public MinecraftConsole getConsole() {
+<span class="nc" id="L89">        return plugin.getConsole();</span>
+    }
+
+    @Override
+    public synchronized void reset() {
+<span class="nc" id="L94">        playerCache.invalidateAll();</span>
+<span class="nc" id="L95">    }</span>
+
+
+    @Nullable
+    private &lt;T&gt; T safeBukkitAPICall(Callable&lt;T&gt; callable) {
+
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        if (Bukkit.isPrimaryThread()) {</span>
+            // We are in the main thread, just execute API calls directly.
+            try {
+<span class="fc" id="L104">                return callable.call();</span>
+<span class="nc" id="L105">            } catch (Exception e) {</span>
+<span class="nc" id="L106">                e.printStackTrace();</span>
+<span class="nc" id="L107">            }</span>
+        } else {
+            // Red Alert, Shields Up.  We are an Async task.  Ask the main
+            // thread to execute these calls, and return the Player data to
+            // cache.
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">            if (plugin instanceof Plugin) {</span>
+                Future&lt;T&gt; task =
+<span class="fc" id="L114">                        Bukkit.getScheduler().callSyncMethod((Plugin) plugin, callable);</span>
+                try {
+                    // This will block the current thread for up to 3s
+<span class="fc" id="L117">                    return task.get(3, TimeUnit.SECONDS);</span>
+<span class="nc" id="L118">                } catch (TimeoutException e) {</span>
+<span class="nc" id="L119">                    plugin.getLogger().warning(&quot;Bukkit API call timed out (Waited &gt;3s). Is the server busy?&quot;);</span>
+<span class="nc" id="L120">                    return null;</span>
+<span class="nc" id="L121">                } catch (InterruptedException e) {</span>
+<span class="nc" id="L122">                    plugin.getLogger().warning(&quot;Bukkit API call Interrupted.&quot;);</span>
+<span class="nc" id="L123">                } catch (ExecutionException e) {</span>
+<span class="nc" id="L124">                    plugin.getLogger().warning(&quot;Bukkit API call threw exception: &quot; + e.getMessage());</span>
+<span class="nc" id="L125">                }</span>
+<span class="nc" id="L126">            } else throw new IllegalPluginAccessException();</span>
+        }
+<span class="nc" id="L128">        return null;</span>
+    }
+
+    private void safeBukkitDispatch(Runnable runnable) {
+<span class="nc bnc" id="L132" title="All 2 branches missed.">        if (Bukkit.isPrimaryThread()) {</span>
+            // We are in the main thread, just execute API calls directly.
+            try {
+<span class="nc" id="L135">                runnable.run();</span>
+<span class="nc" id="L136">            } catch (Exception e) {</span>
+<span class="nc" id="L137">                e.printStackTrace();</span>
+<span class="nc" id="L138">            }</span>
+        } else {
+            // Red Alert, Shields Up.  We are an Async task.  Ask the main
+            // thread to execute these calls, and return the Player data to
+            // cache.
+<span class="nc bnc" id="L143" title="All 2 branches missed.">            if (plugin instanceof Plugin) {</span>
+<span class="nc" id="L144">                Bukkit.getScheduler().runTask((Plugin) plugin, runnable);</span>
+<span class="nc" id="L145">            } else throw new IllegalPluginAccessException();</span>
+        }
+<span class="nc" id="L147">    }</span>
+    
+    /*
+      **********
+      Player API
+      **********
+    */
+
+    public Player getPlayerFromID(UUID id) {
+<span class="nc" id="L156">        return safeBukkitAPICall(() -&gt; Bukkit.getPlayer(UUID.randomUUID()));</span>
+
+    }
+
+    // Get the player's Name (Works even if they are offline)
+    @Nullable
+    @Override
+    public String getPlayerName(final UUID u) {
+<span class="nc" id="L164">        return safeBukkitAPICall(() -&gt; {</span>
+<span class="nc" id="L165">            OfflinePlayer p = Bukkit.getOfflinePlayer(u);</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">            if (p != null) return p.getName();</span>
+<span class="nc" id="L167">            return null;</span>
+        });
+    }
+
+    // Get the player's current world
+    @Nullable
+    @Override
+    public String getPlayerWorldName(final UUID uuid) {
+<span class="nc" id="L175">        return safeBukkitAPICall(() -&gt; {</span>
+<span class="nc" id="L176">            Player p = Bukkit.getPlayer(uuid);</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">            if (p != null) return p.getWorld().getName();</span>
+<span class="nc" id="L178">            return null;</span>
+        });
+    }
+
+    // Check if a player has a perm. (not cached)
+    @Override
+    public Boolean playerIdHasPermission(final UUID u, final String s) {
+<span class="fc" id="L185">        return safeBukkitAPICall(() -&gt; {</span>
+<span class="fc" id="L186">            Player p = Bukkit.getPlayer(u);</span>
+<span class="pc bpc" id="L187" title="2 of 4 branches missed.">            return p != null &amp;&amp; p.hasPermission(s);</span>
+        });
+    }
+
+    @Override
+    public boolean burn(final UUID uuid, final int duration, final String messageString) {
+<span class="nc" id="L193">        safeBukkitDispatch(</span>
+<span class="nc" id="L194">                new BukkitRunnable() {</span>
+                    @Override
+                    public void run() {
+<span class="nc" id="L197">                        Player bukkitPlayer = Bukkit.getPlayer(uuid);</span>
+<span class="nc bnc" id="L198" title="All 2 branches missed.">                        if (bukkitPlayer != null) {</span>
+<span class="nc" id="L199">                            bukkitPlayer.setFireTicks(duration);</span>
+<span class="nc" id="L200">                            bukkitPlayer.sendMessage(messageString);</span>
+                        }
+<span class="nc" id="L202">                    }</span>
+                });
+
+<span class="nc" id="L205">        return true;</span>
+    }
+
+    @Override
+    public void sendMessage(final UUID uuid, final String message) {
+<span class="nc" id="L210">        safeBukkitDispatch(</span>
+<span class="nc" id="L211">                new BukkitRunnable() {</span>
+                    @Override
+                    public void run() {
+<span class="nc" id="L214">                        Player bukkitPlayer = Bukkit.getPlayer(uuid);</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">                        if (bukkitPlayer != null) {</span>
+<span class="nc" id="L216">                            bukkitPlayer.sendMessage(message);</span>
+                        }
+<span class="nc" id="L218">                    }</span>
+                }
+        );
+
+<span class="nc" id="L222">    }</span>
+
+    @Override
+    public void sendMessages(final UUID uuid, final List&lt;String&gt; messages) {
+<span class="nc" id="L226">        safeBukkitDispatch(</span>
+<span class="nc" id="L227">                new BukkitRunnable() {</span>
+                    @Override
+                    public void run() {
+<span class="nc" id="L230">                        Player bukkitPlayer = Bukkit.getPlayer(uuid);</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">                        if (bukkitPlayer != null) {</span>
+<span class="nc bnc" id="L232" title="All 2 branches missed.">                            for (String m : messages) {</span>
+<span class="nc" id="L233">                                bukkitPlayer.sendMessage(m);</span>
+<span class="nc" id="L234">                            }</span>
+                        }
+<span class="nc" id="L236">                    }</span>
+                }
+        );
+<span class="nc" id="L239">    }</span>
+
+    @Override
+    public void executePlayerCommand(final UUID uuid, final String command) {
+<span class="nc" id="L243">        safeBukkitDispatch(</span>
+<span class="nc" id="L244">                new BukkitRunnable() {</span>
+                    @Override
+                    public void run() {
+<span class="nc" id="L247">                        Player bukkitPlayer = Bukkit.getPlayer(uuid);</span>
+<span class="nc bnc" id="L248" title="All 2 branches missed.">                        if (bukkitPlayer != null) {</span>
+<span class="nc" id="L249">                            bukkitPlayer.performCommand(command);</span>
+                        }
+<span class="nc" id="L251">                    }</span>
+                });
+<span class="nc" id="L253">    }</span>
+
+    @Override
+    public boolean withdrawMoney(final UUID uuid, final Double amount, final String messageString) {
+<span class="nc bnc" id="L257" title="All 2 branches missed.">        if (PwnFilterBukkitPlugin.economy != null) {</span>
+<span class="nc" id="L258">            Boolean result = safeBukkitAPICall(</span>
+                    () -&gt; {
+<span class="nc" id="L260">                        Player bukkitPlayer = Bukkit.getPlayer(uuid);</span>
+<span class="nc bnc" id="L261" title="All 2 branches missed.">                        if (bukkitPlayer != null) {</span>
+<span class="nc" id="L262">                            EconomyResponse resp = PwnFilterBukkitPlugin.economy.withdrawPlayer(</span>
+<span class="nc" id="L263">                                    Bukkit.getOfflinePlayer(uuid), amount);</span>
+<span class="nc" id="L264">                            bukkitPlayer.sendMessage(messageString);</span>
+<span class="nc" id="L265">                            return resp.transactionSuccess();</span>
+                        }
+<span class="nc" id="L267">                        return false;</span>
+                    });
+<span class="nc bnc" id="L269" title="All 2 branches missed.">            if (result != null) return result;</span>
+        }
+<span class="nc" id="L271">        return false;</span>
+    }
+
+    @Override
+    public void kick(final UUID uuid, final String messageString) {
+<span class="nc" id="L276">        safeBukkitDispatch(</span>
+<span class="nc" id="L277">                new BukkitRunnable() {</span>
+                    @Override
+                    public void run() {
+<span class="nc" id="L280">                        Player bukkitPlayer = Bukkit.getPlayer(uuid);</span>
+<span class="nc bnc" id="L281" title="All 2 branches missed.">                        if (bukkitPlayer != null)</span>
+<span class="nc" id="L282">                            bukkitPlayer.kickPlayer(messageString);</span>
+<span class="nc" id="L283">                    }</span>
+                });
+
+<span class="nc" id="L286">    }</span>
+
+    @Override
+    public void kill(final UUID uuid, final String messageString) {
+<span class="nc" id="L290">        safeBukkitDispatch(</span>
+<span class="nc" id="L291">                new BukkitRunnable() {</span>
+                    @Override
+                    public void run() {
+<span class="nc" id="L294">                        Player bukkitPlayer = Bukkit.getPlayer(uuid);</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">                        if (bukkitPlayer != null)</span>
+<span class="nc" id="L296">                            bukkitPlayer.getPlayer().setHealth(0);</span>
+<span class="nc" id="L297">                        DeathMessages.addKilledPlayer(uuid, bukkitPlayer + &quot; &quot; + messageString);</span>
+<span class="nc" id="L298">                    }</span>
+                });
+<span class="nc" id="L300">    }</span>
+
+    /*
+      ***********
+      Console API
+      ***********
+     */
+
+    @Override
+    public void sendConsoleMessage(final String message) {
+<span class="nc" id="L310">        safeBukkitDispatch(() -&gt; Bukkit.getConsoleSender().sendMessage(message));</span>
+<span class="nc" id="L311">    }</span>
+
+    @Override
+    public void sendConsoleMessages(final List&lt;String&gt; messageList) {
+<span class="nc" id="L315">        safeBukkitDispatch(() -&gt; {</span>
+<span class="nc bnc" id="L316" title="All 2 branches missed.">            for (String message : messageList) {</span>
+<span class="nc" id="L317">                Bukkit.getConsoleSender().sendMessage(message);</span>
+<span class="nc" id="L318">            }</span>
+<span class="nc" id="L319">        });</span>
+
+<span class="nc" id="L321">    }</span>
+
+    @Override
+    public void sendBroadcast(final String message) {
+<span class="nc" id="L325">        safeBukkitDispatch(() -&gt; Bukkit.broadcastMessage(message));</span>
+<span class="nc" id="L326">    }</span>
+
+    @Override
+    public void sendBroadcast(final List&lt;String&gt; messageList) {
+<span class="nc" id="L330">        safeBukkitDispatch(() -&gt; messageList.forEach(Bukkit::broadcastMessage)</span>
+        );
+<span class="nc" id="L332">    }</span>
+
+    @Override
+    public void executeCommand(final String command) {
+<span class="nc bnc" id="L336" title="All 2 branches missed.">        if (plugin instanceof Plugin) {</span>
+<span class="nc" id="L337">            new BukkitRunnable() {</span>
+                @Override
+                public void run() {
+<span class="nc" id="L340">                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);</span>
+<span class="nc" id="L341">                }</span>
+<span class="nc" id="L342">            }.runTask((Plugin) plugin);</span>
+<span class="nc" id="L343">        } else throw new IllegalPluginAccessException();</span>
+<span class="nc" id="L344">    }</span>
+
+    @Override
+    public void notifyWithPerm(final String permissionString, final String sendString) {
+<span class="nc" id="L348">        safeBukkitDispatch(() -&gt; {</span>
+<span class="nc bnc" id="L349" title="All 2 branches missed.">            if (permissionString.equalsIgnoreCase(&quot;console&quot;)) {</span>
+<span class="nc" id="L350">                Bukkit.getConsoleSender().sendMessage(sendString);</span>
+            } else {
+<span class="nc" id="L352">                Bukkit.getOnlinePlayers()</span>
+<span class="nc" id="L353">                        .stream()</span>
+<span class="nc" id="L354">                        .filter(p -&gt; p.hasPermission(permissionString))</span>
+<span class="nc" id="L355">                        .forEach(p -&gt; p.sendMessage(sendString));</span>
+            }
+<span class="nc" id="L357">        });</span>
+
+<span class="nc" id="L359">    }</span>
+
+<span class="nc" id="L361">    public class PlayerNotFound extends Exception {</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

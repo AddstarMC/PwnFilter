@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TokenString.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PwnFilter</a> &gt; <a href="index.source.html" class="el_package">com.pwn9.filter.engine.rules.parser</a> &gt; <span class="el_source">TokenString.java</span></div><h1>TokenString.java</h1><pre class="source lang-java linenums">/*
+ *  PwnFilter - Chat and user-input filter with the power of Regex
+ *  Copyright (C) 2016 Pwn9.com / Sage905 &lt;sage905@takeflight.ca&gt;
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+ *
+ *
+ */
+
+package com.pwn9.filter.engine.rules.parser;
+
+/**
+ * The &lt;code&gt;TokenString&lt;/code&gt; class takes a &lt;code&gt;String&lt;/code&gt; object
+ * and provides the popToken() method for removing the first word of the
+ * string and returning it.
+ * &lt;p&gt;
+ * User: Sage905
+ * Date: 13-11-20
+ * Time: 8:20 AM
+ *
+ * @author Sage905
+ * @version $Id: $Id
+ */
+class TokenString {
+
+    final private String originalString;
+    private String string;
+
+    /**
+     * &lt;p&gt;Constructor for TokenString.&lt;/p&gt;
+     *
+     * @param originalString a {@link java.lang.String} object.
+     */
+<span class="fc" id="L45">    TokenString(String originalString) {</span>
+
+<span class="pc bpc" id="L47" title="1 of 2 branches missed.">        string = (originalString == null) ? &quot;&quot; : originalString;</span>
+<span class="fc" id="L48">        this.originalString = originalString;</span>
+<span class="fc" id="L49">    }</span>
+
+    /**
+     * This method finds the first token in the string, removes it from the
+     * original string, and returns it. Successive calls to popToken() will
+     * remove a word at a time.  When there are no words left in the string
+     * the token will be an empty string.
+     *
+     * @return A string containing the token.
+     */
+    String popToken() {
+
+        String[] parts;
+<span class="fc" id="L62">        parts = string.split(&quot;\\s&quot;, 2);</span>
+
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        string = (parts.length == 2) ? parts[1] : &quot;&quot;;</span>
+
+<span class="fc" id="L66">        return parts[0];</span>
+    }
+
+    /**
+     * &lt;p&gt;Getter for the field &lt;code&gt;string&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @return a {@link java.lang.String} object.
+     */
+    public String getString() {
+<span class="fc" id="L75">        return string;</span>
+    }
+
+    /**
+     * &lt;p&gt;Getter for the field &lt;code&gt;originalString&lt;/code&gt;.&lt;/p&gt;
+     *
+     * @return a {@link java.lang.String} object.
+     */
+    String getOriginalString() {
+<span class="fc" id="L84">        return originalString;</span>
+    }
+
+    /**
+     * Reset to the original string.
+     */
+    public void reset() {
+<span class="nc" id="L91">        string = originalString;</span>
+<span class="nc" id="L92">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

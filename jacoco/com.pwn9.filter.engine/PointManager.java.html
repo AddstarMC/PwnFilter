@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PointManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PwnFilter</a> &gt; <a href="index.source.html" class="el_package">com.pwn9.filter.engine</a> &gt; <span class="el_source">PointManager.java</span></div><h1>PointManager.java</h1><pre class="source lang-java linenums">/*
+ *  PwnFilter - Chat and user-input filter with the power of Regex
+ *  Copyright (C) 2016 Pwn9.com / Sage905 &lt;sage905@takeflight.ca&gt;
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+ *
+ *
+ */
+
+package com.pwn9.filter.engine;
+
+import com.pwn9.filter.engine.api.Action;
+import com.pwn9.filter.engine.api.FilterClient;
+import com.pwn9.filter.engine.api.FilterContext;
+import com.pwn9.filter.engine.api.MessageAuthor;
+import com.pwn9.filter.engine.rules.chain.RuleChain;
+import com.pwn9.filter.util.SimpleString;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.*;
+import java.util.concurrent.*;
+
+/**
+ * Mange the Points system of PwnFilter.
+ * &lt;p&gt;
+ * Each entity that is capable of having points assigned must have a UUID.
+ * This manager will track the points assigned to a particular UUID.
+ * &lt;p&gt;
+ * User: Sage905
+ * Date: 13-10-31
+ * Time: 3:49 PM
+ *
+ * @author Sage905
+ * @version $Id: $Id
+ */
+@SuppressWarnings(&quot;UnusedDeclaration&quot;)
+public class PointManager implements FilterClient {
+
+<span class="fc" id="L50">    private final Map&lt;UUID, Double&gt; pointsMap = new ConcurrentHashMap&lt;&gt;(8, 0.75f, 2);</span>
+<span class="fc" id="L51">    private final TreeMap&lt;Double, Threshold&gt; thresholds = new TreeMap&lt;&gt;();</span>
+<span class="fc" id="L52">    private final ScheduledExecutorService scheduler =</span>
+<span class="fc" id="L53">            Executors.newScheduledThreadPool(1);</span>
+    private final FilterService filterService;
+<span class="fc" id="L55">    private int leakInterval = 10;</span>
+<span class="fc" id="L56">    private Double leakPoints = 1.0;</span>
+    private ScheduledFuture&lt;?&gt; scheduledFuture;
+
+<span class="fc" id="L59">    PointManager(FilterService filterService) {</span>
+<span class="fc" id="L60">        this.filterService = filterService;</span>
+<span class="fc" id="L61">        this.clearThresholds();</span>
+<span class="fc" id="L62">    }</span>
+
+    public void reset() {
+<span class="nc" id="L65">        stop();</span>
+        // Reset all player points.
+<span class="nc" id="L67">        pointsMap.clear();</span>
+<span class="nc" id="L68">        start();</span>
+<span class="nc" id="L69">    }</span>
+
+    public int getLeakInterval() {
+<span class="nc" id="L72">        return leakInterval;</span>
+    }
+
+    public void setLeakInterval(int leakInterval) {
+<span class="nc" id="L76">        this.leakInterval = leakInterval;</span>
+<span class="nc" id="L77">    }</span>
+
+    public Double getLeakPoints() {
+<span class="nc" id="L80">        return leakPoints;</span>
+    }
+
+    public void setLeakPoints(Double leakPoints) {
+<span class="fc" id="L84">        this.leakPoints = leakPoints;</span>
+<span class="fc" id="L85">    }</span>
+
+    private void clearThresholds() {
+<span class="fc" id="L88">        thresholds.clear();</span>
+        // Setup the 0 threshold
+<span class="fc" id="L90">        addThreshold(&quot;Default&quot;, (double) 0, new ArrayList&lt;&gt;(), new ArrayList&lt;&gt;());</span>
+<span class="fc" id="L91">    }</span>
+
+    void leakTask(PointManager pointManager) {
+        //Every interval, check point balances, and if they are &gt; 0, subtract leakPoints
+        // from the players balance.  If they reach 0, remove them from the list.
+<span class="fc" id="L96">        pointManager.getPointsMap().stream()</span>
+<span class="fc" id="L97">                .forEach((id) -&gt; pointManager.subPoints(id, leakPoints));</span>
+<span class="fc" id="L98">    }</span>
+
+    public void start() {
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">        if (scheduledFuture == null) {</span>
+<span class="fc" id="L102">            scheduledFuture = scheduler.scheduleAtFixedRate(</span>
+<span class="nc" id="L103">                    () -&gt; leakTask(this), 1, leakInterval, TimeUnit.SECONDS);</span>
+        }
+<span class="fc" id="L105">    }</span>
+
+
+    private void stop() {
+<span class="nc bnc" id="L109" title="All 2 branches missed.">        if (scheduledFuture != null) {</span>
+<span class="nc" id="L110">            scheduledFuture.cancel(true);</span>
+<span class="nc" id="L111">            scheduledFuture = null;</span>
+        }
+<span class="nc" id="L113">    }</span>
+
+
+    Set&lt;UUID&gt; getPointsMap() {
+<span class="fc" id="L117">        return pointsMap.keySet();</span>
+    }
+
+    Double getPoints(UUID uuid) {
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">        return (pointsMap.containsKey(uuid)) ? pointsMap.get(uuid) : 0.0;</span>
+    }
+
+    public Double getPoints(MessageAuthor author) {
+<span class="fc bfc" id="L125" title="All 2 branches covered.">        return (pointsMap.containsKey(author.getId())) ? pointsMap.get(author.getId()) : 0.0;</span>
+    }
+
+    void setPoints(UUID id, Double points) {
+<span class="fc" id="L129">        Double old = pointsMap.getOrDefault(id, 0d);</span>
+<span class="fc" id="L130">        pointsMap.put(id, points);</span>
+<span class="fc" id="L131">    }</span>
+
+    public void addPoints(UUID id, Double points) {
+<span class="fc" id="L134">        Double current = pointsMap.getOrDefault(id, 0d);</span>
+<span class="fc" id="L135">        Double updated = current + points;</span>
+
+<span class="fc" id="L137">        pointsMap.put(id, updated);</span>
+
+<span class="fc" id="L139">        executeActions(current, updated, id);</span>
+
+<span class="fc" id="L141">    }</span>
+
+    public boolean isEnabled() {
+<span class="fc bfc" id="L144" title="All 2 branches covered.">        return scheduledFuture != null;</span>
+    }
+
+    private void executeActions(final Double fromValue, final Double toValue, final UUID id) {
+<span class="fc" id="L148">        final Double oldKey = thresholds.floorKey(fromValue);</span>
+<span class="fc" id="L149">        final Double newKey = thresholds.floorKey(toValue);</span>
+
+<span class="pc bpc" id="L151" title="2 of 6 branches missed.">        if (oldKey == null || newKey == null || oldKey.equals(newKey)) return;</span>
+
+<span class="fc bfc" id="L153" title="All 2 branches covered.">        if (fromValue &lt; toValue) {</span>
+
+            // Check to see if we've crossed any thresholds on our way up/down, and if so
+            // execute the actions for that crossing.
+
+<span class="fc bfc" id="L158" title="All 2 branches covered.">            for (Map.Entry&lt;Double, Threshold&gt; entry : thresholds.subMap(oldKey, false, newKey, true).entrySet())</span>
+<span class="fc" id="L159">                entry.getValue().executeAscending(id, this);</span>
+
+        } else {
+<span class="fc bfc" id="L162" title="All 2 branches covered.">            for (Map.Entry&lt;Double, Threshold&gt; entry : thresholds.subMap(newKey, false, oldKey, true).descendingMap().entrySet())</span>
+<span class="fc" id="L163">                entry.getValue().executeDescending(id, this);</span>
+        }
+
+<span class="fc" id="L166">    }</span>
+
+    void subPoints(UUID id, Double points) {
+        Double updated;
+<span class="fc" id="L170">        Double current = pointsMap.getOrDefault(id, 0d);</span>
+<span class="fc" id="L171">        updated = current - points;</span>
+<span class="fc bfc" id="L172" title="All 2 branches covered.">        if (updated &lt;= 0) {</span>
+<span class="fc" id="L173">            pointsMap.remove(id);</span>
+<span class="fc" id="L174">            updated = 0.0;</span>
+        } else {
+<span class="fc" id="L176">            pointsMap.put(id, updated);</span>
+        }
+
+<span class="fc" id="L179">        executeActions(current, updated, id);</span>
+
+<span class="fc" id="L181">    }</span>
+
+    public void addThreshold(String name, Double points, List&lt;Action&gt; ascending, List&lt;Action&gt; descending) {
+<span class="fc" id="L184">        thresholds.put(points, new Threshold(name, points, ascending, descending));</span>
+<span class="fc" id="L185">    }</span>
+
+    @Override
+    public String getShortName() {
+<span class="nc" id="L189">        return &quot;POINTS&quot;;</span>
+    }
+
+    @Override
+    public FilterService getFilterService() {
+<span class="fc" id="L194">        return filterService;</span>
+    }
+
+    @Override
+    public RuleChain getRuleChain() {
+<span class="nc" id="L199">        return null;</span>
+    }
+
+    @Override
+    public boolean isActive() {
+<span class="nc bnc" id="L204" title="All 2 branches missed.">        return scheduledFuture != null;</span>
+    }
+
+    @Override
+    public void activate() {
+<span class="nc" id="L209">        start();</span>
+<span class="nc" id="L210">    }</span>
+
+    @Override
+    public void shutdown() {
+<span class="nc" id="L214">        stop();</span>
+<span class="nc" id="L215">    }</span>
+
+    class Threshold implements Comparable&lt;Threshold&gt; {
+        final String name;
+        final Double points;
+        final List&lt;Action&gt; actionsAscending;
+        final List&lt;Action&gt; actionsDescending;
+
+<span class="fc" id="L223">        Threshold(String name, Double points, List&lt;Action&gt; ascending, List&lt;Action&gt; descending) {</span>
+<span class="fc" id="L224">            this.name = name;</span>
+<span class="fc" id="L225">            this.points = points;</span>
+<span class="fc" id="L226">            this.actionsAscending = ascending;</span>
+<span class="fc" id="L227">            this.actionsDescending = descending;</span>
+<span class="fc" id="L228">        }</span>
+
+        @Override
+        public int compareTo(@NotNull Threshold o) {
+<span class="nc" id="L232">            return Double.compare(this.points, o.points);</span>
+        }
+
+        void executeAscending(UUID id, FilterClient client) {
+<span class="fc" id="L236">            FilterContext state = new FilterContext(new SimpleString(&quot;&quot;), getFilterService().getAuthor(id), client);</span>
+<span class="fc bfc" id="L237" title="All 2 branches covered.">            for (Action a : actionsAscending) {</span>
+<span class="fc" id="L238">                client.getFilterService().getLogger().finest(&quot;Executing Action: &quot; + a + &quot; on &quot; + state.getAuthor().getName());</span>
+<span class="fc" id="L239">                a.execute(state, filterService);</span>
+<span class="fc" id="L240">            }</span>
+<span class="fc" id="L241">        }</span>
+
+        void executeDescending(UUID id, FilterClient client) {
+<span class="fc" id="L244">            FilterContext state = new FilterContext(new SimpleString(&quot;&quot;), getFilterService().getAuthor(id), client);</span>
+<span class="fc bfc" id="L245" title="All 2 branches covered.">            for (Action a : actionsDescending) {</span>
+<span class="fc" id="L246">                client.getFilterService().getLogger().finest(&quot;Executing Action: &quot; + a + &quot; on &quot; + state.getAuthor().getName());</span>
+<span class="fc" id="L247">                a.execute(state, filterService);</span>
+<span class="fc" id="L248">            }</span>
+<span class="fc" id="L249">        }</span>
+
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TargetedAction.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PwnFilter</a> &gt; <a href="index.source.html" class="el_package">com.pwn9.filter.engine.rules.action.targeted</a> &gt; <span class="el_source">TargetedAction.java</span></div><h1>TargetedAction.java</h1><pre class="source lang-java linenums">/*
+ *  PwnFilter - Chat and user-input filter with the power of Regex
+ *  Copyright (C) 2016 Pwn9.com / Sage905 &lt;sage905@takeflight.ca&gt;
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+ *
+ *
+ */
+
+package com.pwn9.filter.engine.rules.action.targeted;
+
+import com.pwn9.filter.engine.FilterConfig;
+import com.pwn9.filter.engine.api.Action;
+import com.pwn9.filter.engine.api.ActionToken;
+import com.pwn9.filter.engine.rules.action.InvalidActionException;
+
+import java.util.Arrays;
+import java.util.stream.Stream;
+
+<span class="fc" id="L31">public enum TargetedAction implements ActionToken {</span>
+<span class="fc" id="L32">    BURN(&quot;burnmsg&quot;) {</span>
+        @Override
+        public Action getAction(String s, FilterConfig filterConfig) {
+<span class="fc" id="L35">            return Burn.getAction(s);</span>
+        }
+
+        public void setDefMsg(String s) {
+<span class="fc" id="L39">            Burn.setDefaultMessage(s);</span>
+<span class="fc" id="L40">        }</span>
+    },
+<span class="fc" id="L42">    FINE(&quot;finemsg&quot;) {</span>
+        @Override
+        public void setDefMsg(String s) {
+<span class="fc" id="L45">            Fine.setDefaultMessage(s);</span>
+<span class="fc" id="L46">        }</span>
+
+        @Override
+        public Action getAction(String s, FilterConfig filterConfig) throws InvalidActionException {
+<span class="nc" id="L50">            return Fine.getAction(s);</span>
+        }
+    },
+<span class="fc" id="L53">    KICK(&quot;kickmsg&quot;) {</span>
+        @Override
+        public void setDefMsg(String s) {
+<span class="fc" id="L56">            Kick.setDefaultMessage(s);</span>
+<span class="fc" id="L57">        }</span>
+
+        @Override
+        public Action getAction(String s, FilterConfig filterConfig) {
+<span class="nc" id="L61">            return Kick.getAction(s);</span>
+        }
+    },
+<span class="fc" id="L64">    KILL(&quot;killmsg&quot;) {</span>
+        @Override
+        public void setDefMsg(String s) {
+<span class="fc" id="L67">            Kill.setDefaultMessage(s);</span>
+<span class="fc" id="L68">        }</span>
+
+        @Override
+        public Action getAction(String s, FilterConfig filterConfig) {
+<span class="nc" id="L72">            return Kill.getAction(s);</span>
+        }
+    },
+<span class="fc" id="L75">    RESPOND(&quot;&quot;) {</span>
+        @Override
+        public Action getAction(String s, FilterConfig filterConfig) {
+<span class="fc" id="L78">            return Respond.getAction(s);</span>
+        }
+    },
+<span class="fc" id="L81">    RESPONDFILE(&quot;&quot;) {</span>
+        @Override
+        public Action getAction(String s, FilterConfig filterConfig) throws InvalidActionException {
+<span class="fc" id="L84">            return RespondFile.getAction(s, filterConfig.getTextDir());</span>
+        }
+    },
+<span class="fc" id="L87">    WARN(&quot;&quot;) {</span>
+        @Override
+        public void setDefMsg(String s) {
+<span class="nc" id="L90">            Warn.setDefaultMessage(s);</span>
+<span class="nc" id="L91">        }</span>
+
+        @Override
+        public Action getAction(String s, FilterConfig filterConfig) {
+<span class="fc" id="L95">            return Warn.getAction(s);</span>
+        }
+    };
+
+    private final String defaultMsgConfig;
+
+<span class="fc" id="L101">    TargetedAction(String defaultMsgConfig) {</span>
+<span class="fc" id="L102">        this.defaultMsgConfig = defaultMsgConfig;</span>
+<span class="fc" id="L103">    }</span>
+
+    public static Stream&lt;TargetedAction&gt; getActionsWithDefaults() {
+<span class="fc bfc" id="L106" title="All 2 branches covered.">        return Arrays.stream(TargetedAction.values()).filter(e -&gt; !e.getDefaultMsgConfigName().isEmpty());</span>
+    }
+
+    public String getDefaultMsgConfigName() {
+<span class="fc" id="L110">        return defaultMsgConfig;</span>
+    }
+
+    public void setDefMsg(String s) {
+<span class="nc" id="L114">        throw new RuntimeException(&quot;Can not set Default message on action&quot; + this.toString());</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

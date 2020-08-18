@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RespondFile.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PwnFilter</a> &gt; <a href="index.source.html" class="el_package">com.pwn9.filter.engine.rules.action.targeted</a> &gt; <span class="el_source">RespondFile.java</span></div><h1>RespondFile.java</h1><pre class="source lang-java linenums">/*
+ *  PwnFilter - Chat and user-input filter with the power of Regex
+ *  Copyright (C) 2016 Pwn9.com / Sage905 &lt;sage905@takeflight.ca&gt;
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+ *
+ *
+ */
+
+package com.pwn9.filter.engine.rules.action.targeted;
+
+import com.google.common.collect.ImmutableList;
+import com.pwn9.filter.engine.FilterService;
+import com.pwn9.filter.engine.api.Action;
+import com.pwn9.filter.engine.api.FilterContext;
+import com.pwn9.filter.engine.rules.action.InvalidActionException;
+import com.pwn9.filter.util.tag.TagRegistry;
+import org.bukkit.ChatColor;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.MalformedInputException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+/**
+ * Responds to the user with the string provided.
+ *
+ * @author Sage905
+ * @version $Id: $Id
+ */
+
+class RespondFile implements Action {
+    private final List&lt;String&gt; messageStrings;
+
+<span class="fc" id="L53">    private RespondFile(List&lt;String&gt; messageStrings) {</span>
+<span class="fc" id="L54">        this.messageStrings = messageStrings;</span>
+<span class="fc" id="L55">    }</span>
+
+    public static Action getAction(String s, File sourceDir) throws InvalidActionException {
+<span class="fc" id="L58">        ArrayList&lt;String&gt; messageStrings = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L59">        Path filePath = sourceDir.toPath().resolve(s);</span>
+
+<span class="fc" id="L61">        try (Stream&lt;String&gt; sourceLines = Files.lines(filePath)) {</span>
+<span class="fc" id="L62">            sourceLines.forEach((String message) -&gt;</span>
+<span class="fc" id="L63">                    messageStrings.add(ChatColor.translateAlternateColorCodes('&amp;', message)));</span>
+<span class="nc" id="L64">        } catch (FileNotFoundException ex) {</span>
+<span class="nc" id="L65">            throw new InvalidActionException(&quot;File not found while trying to add Action: &quot; + ex.getMessage());</span>
+<span class="nc" id="L66">        } catch (IOException ex) {</span>
+<span class="nc" id="L67">            throw new InvalidActionException(&quot;Error reading file: &quot; + s);</span>
+<span class="nc" id="L68">        } catch (UncheckedIOException ex) {</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">            if (ex.getCause() instanceof MalformedInputException) {</span>
+<span class="nc" id="L70">                throw new InvalidActionException(&quot;Error reading file: &quot; + s + &quot; File was not utf-8 encoded.&quot;, ex.getCause());</span>
+            }
+<span class="fc" id="L72">        }</span>
+
+<span class="fc" id="L74">        return new RespondFile(ImmutableList.copyOf(messageStrings));</span>
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void execute(final FilterContext filterTask, FilterService filterService) {
+<span class="nc" id="L81">        final ArrayList&lt;String&gt; preparedMessages = messageStrings.stream().map(message -&gt; TagRegistry.replaceTags(message, filterTask)).collect(Collectors.toCollection(ArrayList::new));</span>
+
+<span class="nc" id="L83">        filterTask.getAuthor().sendMessages(preparedMessages);</span>
+
+<span class="nc" id="L85">        filterTask.addLogMessage(&quot;Responded to &quot; + filterTask.getAuthor().getName() + &quot; with: &quot; + preparedMessages.get(0) + &quot;...&quot;);</span>
+
+<span class="nc" id="L87">    }</span>
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PwnFilterSignListener.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PwnFilter</a> &gt; <a href="index.source.html" class="el_package">com.pwn9.filter.bukkit.listener</a> &gt; <span class="el_source">PwnFilterSignListener.java</span></div><h1>PwnFilterSignListener.java</h1><pre class="source lang-java linenums">/*
+ *  PwnFilter - Chat and user-input filter with the power of Regex
+ *  Copyright (C) 2016 Pwn9.com / Sage905 &lt;sage905@takeflight.ca&gt;
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+ *
+ *
+ */
+
+package com.pwn9.filter.bukkit.listener;
+
+import com.pwn9.filter.bukkit.PwnFilterBukkitPlugin;
+import com.pwn9.filter.bukkit.PwnFilterPlugin;
+import com.pwn9.filter.bukkit.config.BukkitConfig;
+import com.pwn9.filter.engine.api.FilterContext;
+import com.pwn9.filter.engine.api.MessageAuthor;
+import com.pwn9.filter.engine.rules.chain.InvalidChainException;
+import com.pwn9.filter.minecraft.util.ColoredString;
+import org.bukkit.Bukkit;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.block.SignChangeEvent;
+import org.bukkit.plugin.PluginManager;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+
+/**
+ * Listen for Sign Change events and apply the filter to the text.
+ *
+ * @author Sage905
+ * @version $Id: $Id
+ */
+public class PwnFilterSignListener extends BaseListener {
+    private final PwnFilterPlugin plugin;
+
+    public PwnFilterSignListener(PwnFilterPlugin plugin) {
+<span class="fc" id="L50">        super(plugin.getFilterService());</span>
+<span class="fc" id="L51">        this.plugin = plugin;</span>
+<span class="fc" id="L52">    }</span>
+
+
+    @Override
+    public String getShortName() {
+<span class="fc" id="L57">        return &quot;SIGN&quot;;</span>
+    }
+
+    /**
+     * The sign filter has extra work to do that the chat doesn't:
+     * 1. Take lines of sign and aggregate them into one string for processing
+     * 2. Feed them into the filter.
+     * 3. Re-split the lines so they can be placed on the sign.
+     *
+     * @param event The SignChangeEvent to be processed.
+     */
+    void onSignChange(SignChangeEvent event) {
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">        if (event.isCancelled()) return;</span>
+
+<span class="fc" id="L71">        MessageAuthor signAuthor = plugin.getFilterService().getAuthor((event.getPlayer().getUniqueId()));</span>
+
+        // Permissions Check, if player has bypass permissions, then skip everything.
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">        if (signAuthor.hasPermission(&quot;pwnfilter.bypass.signs&quot;)) {</span>
+<span class="nc" id="L75">            return;</span>
+        }
+        // Take the message from the SignListenerEvent and send it through the filter.
+<span class="fc" id="L78">        StringBuilder builder = new StringBuilder();</span>
+
+<span class="fc bfc" id="L80" title="All 2 branches covered.">        for (String l : event.getLines()) {</span>
+<span class="fc" id="L81">            builder.append(l).append(&quot;\t&quot;);</span>
+        }
+<span class="fc" id="L83">        String signLines = builder.toString().trim();</span>
+
+<span class="fc" id="L85">        FilterContext filterTask = new FilterContext(new ColoredString(signLines),</span>
+                signAuthor, this);
+
+<span class="fc" id="L88">        ruleChain.execute(filterTask, filterService);</span>
+
+<span class="fc bfc" id="L90" title="All 2 branches covered.">        if (filterTask.messageChanged()) {</span>
+            // TODO: Can colors be placed on signs?  Wasn't working. Find out why.
+            // Break the changed string into new Lines
+<span class="fc" id="L93">            List&lt;String&gt; newLines = new ArrayList&lt;&gt;();</span>
+
+            // Global decolor
+<span class="pc bpc" id="L96" title="3 of 4 branches missed.">            if ((BukkitConfig.decolor()) &amp;&amp; !(signAuthor.hasPermission(&quot;pwnfilter.color&quot;))) {</span>
+<span class="nc" id="L97">                Collections.addAll(newLines, filterTask.getModifiedMessage().toString().split(&quot;\t&quot;));</span>
+            } else {
+<span class="fc" id="L99">                Collections.addAll(newLines, filterTask.getModifiedMessage().getRaw().split(&quot;\t&quot;));</span>
+            }
+
+<span class="fc" id="L102">            String[] outputLines = new String[4];</span>
+
+            // Check if any of the lines are now too long to fit the sign.  Truncate if they are.
+
+<span class="pc bpc" id="L106" title="1 of 4 branches missed.">            for (int i = 0; i &lt; 4 &amp;&amp; i &lt; newLines.size(); i++) {</span>
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">                if (newLines.get(i).length() &gt; 15) {</span>
+<span class="nc" id="L108">                    outputLines[i] = newLines.get(i).substring(0, 15);</span>
+                } else {
+<span class="fc" id="L110">                    outputLines[i] = newLines.get(i);</span>
+                }
+            }
+
+<span class="fc bfc" id="L114" title="All 2 branches covered.">            for (int i = 0; i &lt; 4; i++) {</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">                if (outputLines[i] != null) {</span>
+<span class="fc" id="L116">                    event.setLine(i, outputLines[i]);</span>
+                } else {
+<span class="fc" id="L118">                    event.setLine(i, &quot;&quot;);</span>
+                }
+            }
+        }
+
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">        if (filterTask.isCancelled()) {</span>
+<span class="nc" id="L124">            event.setCancelled(true);</span>
+<span class="nc" id="L125">            filterTask.getAuthor().sendMessage(&quot;Your sign broke, there must be something wrong with it.&quot;);</span>
+<span class="nc" id="L126">            filterTask.addLogMessage(&quot;SIGN &quot; + filterTask.getAuthor().getName() + &quot; sign text: &quot;</span>
+<span class="nc" id="L127">                    + filterTask.getOriginalMessage().getRaw());</span>
+        }
+
+<span class="fc" id="L130">    }</span>
+
+    /**
+     * {@inheritDoc}
+     * &lt;p&gt;
+     * Activate this listener.  This method can be called either by the owning plugin
+     * or by PwnFilter.  PwnFilter will call the shutdown / activate methods when PwnFilter
+     * is enabled / disabled and whenever it is reloading its config / rules.
+     * &lt;p&gt;
+     * These methods could either register / deregister the listener with Bukkit, or
+     * they could just enable / disable the use of the filter.
+     */
+    @Override
+    public void activate() {
+<span class="nc bnc" id="L144" title="All 2 branches missed.">        if (isActive()) return;</span>
+
+        try {
+
+<span class="nc" id="L148">            PluginManager pm = Bukkit.getPluginManager();</span>
+<span class="nc" id="L149">            EventPriority priority = BukkitConfig.getSignpriority();</span>
+
+<span class="nc bnc" id="L151" title="All 2 branches missed.">            if (BukkitConfig.signfilterEnabled()) {</span>
+<span class="nc" id="L152">                ruleChain = getCompiledChain(filterService.getConfig().getRuleFile(&quot;sign.txt&quot;));</span>
+                // Now register the listener with the appropriate priority
+<span class="nc" id="L154">                pm.registerEvent(SignChangeEvent.class, this, priority,</span>
+<span class="nc" id="L155">                        (l, e) -&gt; onSignChange((SignChangeEvent) e),</span>
+<span class="nc" id="L156">                        PwnFilterBukkitPlugin.getInstance());</span>
+
+<span class="nc" id="L158">                plugin.getLogger().info(&quot;Activated SignListener with Priority Setting: &quot; + priority.toString()</span>
+<span class="nc" id="L159">                        + &quot; Rule Count: &quot; + getRuleChain().ruleCount());</span>
+
+<span class="nc" id="L161">                setActive();</span>
+            }
+<span class="nc" id="L163">        } catch (InvalidChainException e) {</span>
+<span class="nc" id="L164">            plugin.getLogger().severe(&quot;Unable to activate SignListener.  Error: &quot; + e.getMessage());</span>
+<span class="nc" id="L165">            setInactive();</span>
+<span class="nc" id="L166">        }</span>
+<span class="nc" id="L167">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

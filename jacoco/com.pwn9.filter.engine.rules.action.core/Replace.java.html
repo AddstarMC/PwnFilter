@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Replace.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PwnFilter</a> &gt; <a href="index.source.html" class="el_package">com.pwn9.filter.engine.rules.action.core</a> &gt; <span class="el_source">Replace.java</span></div><h1>Replace.java</h1><pre class="source lang-java linenums">/*
+ *  PwnFilter - Chat and user-input filter with the power of Regex
+ *  Copyright (C) 2016 Pwn9.com / Sage905 &lt;sage905@takeflight.ca&gt;
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+ *
+ *
+ */
+
+package com.pwn9.filter.engine.rules.action.core;
+
+import com.pwn9.filter.engine.FilterService;
+import com.pwn9.filter.engine.api.Action;
+import com.pwn9.filter.engine.api.FilterContext;
+import com.pwn9.filter.util.SimpleString;
+import org.bukkit.ChatColor;
+
+/**
+ * De-color the whole string and replace the matched text with the replacement string.
+ *
+ * @author Sage905
+ * @version $Id: $Id
+ */
+class Replace implements Action {
+
+    // messageString is what we will use to replace any matched text.
+    private final String messageString;
+
+<span class="fc" id="L40">    private Replace(String message) {</span>
+<span class="fc" id="L41">        this.messageString = message;</span>
+<span class="fc" id="L42">    }</span>
+
+    static Action getAction(String s) {
+<span class="fc" id="L45">        String message = ChatColor.translateAlternateColorCodes('&amp;', s).</span>
+<span class="fc" id="L46">                replaceAll(&quot;\&quot;&quot;, &quot;&quot;);</span>
+<span class="fc" id="L47">        return new Replace(message);</span>
+    }
+
+    @Override
+    public void execute(final FilterContext filterTask, FilterService filterService) {
+<span class="fc" id="L52">        filterTask.setModifiedMessage(new SimpleString(filterTask.</span>
+<span class="fc" id="L53">                getModifiedMessage().toString()).</span>
+<span class="fc" id="L54">                replaceText(filterTask.getPattern(), messageString));</span>
+<span class="fc" id="L55">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

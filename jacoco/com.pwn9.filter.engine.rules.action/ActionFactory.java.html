@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ActionFactory.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PwnFilter</a> &gt; <a href="index.source.html" class="el_package">com.pwn9.filter.engine.rules.action</a> &gt; <span class="el_source">ActionFactory.java</span></div><h1>ActionFactory.java</h1><pre class="source lang-java linenums">/*
+ *  PwnFilter - Chat and user-input filter with the power of Regex
+ *  Copyright (C) 2016 Pwn9.com / Sage905 &lt;sage905@takeflight.ca&gt;
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+ *
+ *
+ */
+
+package com.pwn9.filter.engine.rules.action;
+
+import com.pwn9.filter.engine.FilterConfig;
+import com.pwn9.filter.engine.FilterService;
+import com.pwn9.filter.engine.api.Action;
+import com.pwn9.filter.engine.api.ActionToken;
+import com.pwn9.filter.engine.rules.action.core.CoreAction;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * This factory returns an action object selected by the rules file.
+ * eg: &quot;then kick&quot; would return the Actionkick object.
+ *
+ * @author Sage905
+ * @version $Id: $Id
+ */
+public final class ActionFactory {
+
+<span class="fc" id="L41">    private final List&lt;Class&lt;? extends ActionToken&gt;&gt; actionTokens =</span>
+            new ArrayList&lt;&gt;();
+    private final FilterConfig filterConfig;
+
+<span class="fc" id="L45">    public ActionFactory(FilterService filterService) {</span>
+        // Ensure that all instances get the Core Actions
+<span class="fc" id="L47">        actionTokens.add(CoreAction.class);</span>
+<span class="fc" id="L48">        filterConfig = filterService.getConfig();</span>
+<span class="fc" id="L49">    }</span>
+
+    public Action getActionFromString(String s) throws InvalidActionException {
+<span class="fc" id="L52">        String[] parts = s.split(&quot;\\s&quot;, 2);</span>
+<span class="fc" id="L53">        String actionName = parts[0];</span>
+        String actionData;
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">        actionData = ((parts.length &gt; 1) ? parts[1] : &quot;&quot;);</span>
+
+<span class="fc" id="L57">        return getAction(actionName, actionData);</span>
+    }
+
+    public Action getAction(final String actionName, final String actionData)
+            throws InvalidActionException {
+
+        // Scan all tokens for a match
+
+<span class="pc bpc" id="L65" title="1 of 2 branches missed.">        for (Class&lt;? extends ActionToken&gt; tokens : actionTokens) {</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">            for (ActionToken token : tokens.getEnumConstants()) {</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">                if (token.toString().equals(actionName.toUpperCase())) {</span>
+<span class="fc" id="L68">                    return token.getAction(actionData, filterConfig);</span>
+                }
+            }
+<span class="fc" id="L71">        }</span>
+<span class="nc" id="L72">        throw new InvalidActionException(&quot;Unable to implement action: &quot; + actionName</span>
+                + &quot; / &quot; + actionData);
+    }
+
+    synchronized public void addActionTokens(Class&lt;? extends ActionToken&gt; tokenEnum) {
+<span class="fc" id="L77">        actionTokens.add(tokenEnum);</span>
+<span class="fc" id="L78">    }</span>
+
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Points.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PwnFilter</a> &gt; <a href="index.source.html" class="el_package">com.pwn9.filter.engine.rules.action.core</a> &gt; <span class="el_source">Points.java</span></div><h1>Points.java</h1><pre class="source lang-java linenums">/*
+ *  PwnFilter - Chat and user-input filter with the power of Regex
+ *  Copyright (C) 2016 Pwn9.com / Sage905 &lt;sage905@takeflight.ca&gt;
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+ *
+ *
+ */
+
+package com.pwn9.filter.engine.rules.action.core;
+
+import com.pwn9.filter.engine.FilterService;
+import com.pwn9.filter.engine.PointManager;
+import com.pwn9.filter.engine.api.Action;
+import com.pwn9.filter.engine.api.FilterContext;
+import com.pwn9.filter.engine.api.MessageAuthor;
+import com.pwn9.filter.engine.rules.Rule;
+import com.pwn9.filter.engine.rules.action.InvalidActionException;
+import org.bukkit.ChatColor;
+
+/**
+ * Add the configured number of points to the players account.
+ *
+ * @author Sage905
+ * @version $Id: $Id
+ */
+
+class Points implements Action {
+
+    private final String messageString;
+    private final double pointsAmount; // How much to fine the player.
+
+<span class="fc" id="L44">    private Points(String messageString, Double pointsAmount) {</span>
+<span class="fc" id="L45">        this.messageString = messageString;</span>
+<span class="fc" id="L46">        this.pointsAmount = pointsAmount;</span>
+<span class="fc" id="L47">    }</span>
+
+    static Action getAction(String s) throws InvalidActionException {
+        String[] parts;
+        String message;
+        Double points;
+<span class="fc" id="L53">        parts = s.split(&quot;\\s&quot;, 2);</span>
+        try {
+<span class="fc" id="L55">            points = Double.parseDouble(parts[0]);</span>
+<span class="nc" id="L56">        } catch (NumberFormatException e) {</span>
+<span class="nc" id="L57">            throw new InvalidActionException(&quot;'points' action did not have a valid amount.&quot;);</span>
+<span class="fc" id="L58">        }</span>
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">        message = (parts.length &gt; 1) ? ChatColor.translateAlternateColorCodes('&amp;', parts[1]) : &quot;&quot;;</span>
+
+<span class="fc" id="L61">        return new Points(message, points);</span>
+    }
+
+    @Override
+    public void execute(final FilterContext filterTask, FilterService filterService) {
+<span class="fc" id="L66">        MessageAuthor a = filterTask.getAuthor();</span>
+
+<span class="pc bpc" id="L68" title="1 of 2 branches missed.">        if (a == null) return;</span>
+
+<span class="fc" id="L70">        PointManager pm = filterService.getPointManager();</span>
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">        if (!pm.isEnabled()) {</span>
+<span class="nc" id="L72">            Rule thisRule = filterTask.getRule();</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">            filterService.getLogger().fine(String.format(&quot;Rule: %s has 'then points', but PointManager is disabled in config.yml&quot;,</span>
+<span class="nc" id="L74">                    (thisRule != null) ? thisRule.getId() : &quot;None&quot;));</span>
+<span class="nc" id="L75">            return;</span>
+        }
+
+        // TODO: Add more comprehensive messaging, as well as details about thresholds.
+
+<span class="fc" id="L80">        pm.addPoints(a.getId(), pointsAmount);</span>
+
+<span class="fc" id="L82">        filterTask.addLogMessage(String.format(&quot;Points Accumulated %s : %f. Total: %f&quot;, a.getName(), pointsAmount, pm.getPoints(a)));</span>
+
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">        if (!messageString.isEmpty()) {</span>
+<span class="fc" id="L85">            a.sendMessage(messageString);</span>
+        }
+
+<span class="fc" id="L88">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

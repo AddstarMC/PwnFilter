@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PwnFilterCommandListener.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PwnFilter</a> &gt; <a href="index.source.html" class="el_package">com.pwn9.filter.bukkit.listener</a> &gt; <span class="el_source">PwnFilterCommandListener.java</span></div><h1>PwnFilterCommandListener.java</h1><pre class="source lang-java linenums">/*
+ *  PwnFilter - Chat and user-input filter with the power of Regex
+ *  Copyright (C) 2016 Pwn9.com / Sage905 &lt;sage905@takeflight.ca&gt;
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.
+ *
+ *
+ */
+
+package com.pwn9.filter.bukkit.listener;
+
+import com.pwn9.filter.bukkit.PwnFilterBukkitPlugin;
+import com.pwn9.filter.bukkit.config.BukkitConfig;
+import com.pwn9.filter.engine.api.FilterContext;
+import com.pwn9.filter.engine.api.MessageAuthor;
+import com.pwn9.filter.engine.rules.chain.InvalidChainException;
+import com.pwn9.filter.engine.rules.chain.RuleChain;
+import com.pwn9.filter.minecraft.util.ColoredString;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.plugin.PluginManager;
+
+/**
+ * Apply the filter to commands.
+ *
+ * @author Sage905
+ * @version $Id: $Id
+ */
+public class PwnFilterCommandListener extends BaseListener {
+    private final PwnFilterBukkitPlugin plugin;
+    private RuleChain chatRuleChain;
+
+    public PwnFilterCommandListener(PwnFilterBukkitPlugin plugin) {
+<span class="nc" id="L47">        super(plugin.getFilterService());</span>
+<span class="nc" id="L48">        this.plugin = plugin;</span>
+<span class="nc" id="L49">    }</span>
+
+    public String getShortName() {
+<span class="nc" id="L52">        return &quot;COMMAND&quot;;</span>
+    }
+
+    @Override
+    public void activate() {
+<span class="nc bnc" id="L57" title="All 2 branches missed.">        if (isActive()) return;</span>
+
+<span class="nc" id="L59">        PluginManager pm = Bukkit.getPluginManager();</span>
+<span class="nc" id="L60">        EventPriority priority = BukkitConfig.getCmdpriority();</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">        if (BukkitConfig.cmdfilterEnabled()) {</span>
+            try {
+<span class="nc" id="L63">                ruleChain = getCompiledChain(filterService.getConfig().getRuleFile(&quot;command.txt&quot;));</span>
+<span class="nc" id="L64">                chatRuleChain = getCompiledChain(filterService.getConfig().getRuleFile(&quot;chat.txt&quot;));</span>
+
+<span class="nc" id="L66">                pm.registerEvent(PlayerCommandPreprocessEvent.class, this, priority,</span>
+<span class="nc" id="L67">                        (l, e) -&gt; eventProcessor((PlayerCommandPreprocessEvent) e),</span>
+<span class="nc" id="L68">                        PwnFilterBukkitPlugin.getInstance());</span>
+<span class="nc" id="L69">                setActive();</span>
+<span class="nc" id="L70">                plugin.getLogger().info(&quot;Activated CommandListener with Priority Setting: &quot; + priority.toString()</span>
+<span class="nc" id="L71">                        + &quot; Rule Count: &quot; + getRuleChain().ruleCount());</span>
+
+<span class="nc" id="L73">                StringBuilder sb = new StringBuilder(&quot;Commands to filter: &quot;);</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">                for (String command : BukkitConfig.getCmdlist())</span>
+<span class="nc" id="L75">                    sb.append(command).append(&quot; &quot;);</span>
+<span class="nc" id="L76">                plugin.getLogger().finest(sb.toString().trim());</span>
+
+<span class="nc" id="L78">                sb = new StringBuilder(&quot;Commands to never filter: &quot;);</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">                for (String command : BukkitConfig.getCmdblist())</span>
+<span class="nc" id="L80">                    sb.append(command).append(&quot; &quot;);</span>
+<span class="nc" id="L81">                plugin.getLogger().finest(sb.toString().trim());</span>
+<span class="nc" id="L82">            } catch (InvalidChainException e) {</span>
+<span class="nc" id="L83">                plugin.getLogger().severe(&quot;Unable to activate CommandListener.  Error: &quot; + e.getMessage());</span>
+<span class="nc" id="L84">                setInactive();</span>
+<span class="nc" id="L85">            }</span>
+        }
+<span class="nc" id="L87">    }</span>
+
+
+    /**
+     * &lt;p&gt;eventProcessor.&lt;/p&gt;
+     *
+     * @param event a {@link org.bukkit.event.player.PlayerCommandPreprocessEvent} object.
+     */
+    private void eventProcessor(PlayerCommandPreprocessEvent event) {
+
+<span class="nc bnc" id="L97" title="All 2 branches missed.">        if (event.isCancelled()) return;</span>
+
+
+<span class="nc" id="L100">        MessageAuthor minecraftPlayer = plugin.getFilterService().getAuthor((event.getPlayer().getUniqueId()));</span>
+
+<span class="nc bnc" id="L102" title="All 2 branches missed.">        if (minecraftPlayer.hasPermission(&quot;pwnfilter.bypass.commands&quot;)) return;</span>
+
+<span class="nc" id="L104">        String message = event.getMessage();</span>
+
+        //Gets the actual command as a string
+<span class="nc" id="L107">        String cmdmessage = message.substring(1).split(&quot; &quot;)[0];</span>
+
+
+<span class="nc" id="L110">        FilterContext filterTask = new FilterContext(new ColoredString(message), minecraftPlayer, this);</span>
+
+        // Check to see if we should treat this command as chat (eg: /tell)
+<span class="nc bnc" id="L113" title="All 2 branches missed.">        if (BukkitConfig.getCmdchat().contains(cmdmessage)) {</span>
+            // Global mute
+<span class="nc bnc" id="L115" title="All 4 branches missed.">            if ((BukkitConfig.globalMute()) &amp;&amp; (!minecraftPlayer.hasPermission(&quot;pwnfilter.bypass.mute&quot;))) {</span>
+<span class="nc" id="L116">                event.setCancelled(true);</span>
+<span class="nc" id="L117">                return;</span>
+            }
+
+            // Simple Spam filter
+<span class="nc bnc" id="L121" title="All 4 branches missed.">            if (BukkitConfig.commandspamfilterEnabled() &amp;&amp; !minecraftPlayer.hasPermission(&quot;pwnfilter.bypass.spam&quot;)) {</span>
+                // Keep a log of the last message sent by this player.  If it's the same as the current message, cancel.
+<span class="nc bnc" id="L123" title="All 4 branches missed.">                if (PwnFilterBukkitPlugin.lastMessage.containsKey(minecraftPlayer.getId()) &amp;&amp; PwnFilterBukkitPlugin.lastMessage.get(minecraftPlayer.getId()).equals(message)) {</span>
+<span class="nc" id="L124">                    event.setCancelled(true);</span>
+<span class="nc" id="L125">                    minecraftPlayer.sendMessage(ChatColor.DARK_RED + &quot;[PwnFilter]&quot; + ChatColor.RED + &quot; Repeated command blocked by spam filter.&quot;);</span>
+<span class="nc" id="L126">                    return;</span>
+                }
+<span class="nc" id="L128">                PwnFilterBukkitPlugin.lastMessage.put(minecraftPlayer.getId(), message);</span>
+            }
+
+<span class="nc" id="L131">            chatRuleChain.execute(filterTask, filterService);</span>
+
+        } else {
+
+<span class="nc bnc" id="L135" title="All 4 branches missed.">            if (!BukkitConfig.getCmdlist().isEmpty() &amp;&amp; !BukkitConfig.getCmdlist().contains(cmdmessage))</span>
+<span class="nc" id="L136">                return;</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">            if (BukkitConfig.getCmdblist().contains(cmdmessage)) return;</span>
+
+            // Take the message from the Command Event and send it through the filter.
+
+<span class="nc" id="L141">            ruleChain.execute(filterTask, filterService);</span>
+
+        }
+
+        // Only update the message if it has been changed.
+<span class="nc bnc" id="L146" title="All 2 branches missed.">        if (filterTask.messageChanged()) {</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">            if (filterTask.getModifiedMessage().toString().isEmpty()) {</span>
+<span class="nc" id="L148">                event.setCancelled(true);</span>
+<span class="nc" id="L149">                return;</span>
+            }
+<span class="nc" id="L151">            event.setMessage(filterTask.getModifiedMessage().getRaw());</span>
+        }
+
+<span class="nc bnc" id="L154" title="All 2 branches missed.">        if (filterTask.isCancelled()) event.setCancelled(true);</span>
+
+<span class="nc" id="L156">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>
