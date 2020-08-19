@@ -20,8 +20,10 @@
 
 package com.pwn9.filter.minecraft.command;
 
+import com.pwn9.filter.bukkit.BukkitAPI;
 import com.pwn9.filter.minecraft.api.MinecraftConsole;
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -51,7 +53,6 @@ public class pfcls implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        sender.sendMessage(ChatColor.RED + "Clearing chat screen");
         logger.info("chat screen cleared by " + sender.getName());
         int i = 0;
         List<String> messages = new ArrayList<>();

@@ -24,8 +24,8 @@ import com.google.common.collect.ImmutableList;
 import com.pwn9.filter.engine.FilterService;
 import com.pwn9.filter.engine.api.Action;
 import com.pwn9.filter.engine.api.FilterContext;
+import com.pwn9.filter.util.PwnFormatter;
 import com.pwn9.filter.util.tag.TagRegistry;
-import org.bukkit.ChatColor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +52,7 @@ public class Respond implements Action {
         ArrayList<String> messageStrings = new ArrayList<>();
 
         for (String message : s.split("\n")) {
-            messageStrings.add(ChatColor.translateAlternateColorCodes('&', message));
+            messageStrings.add(PwnFormatter.legacyTextConverter(message));
         }
         return new Respond(ImmutableList.copyOf(messageStrings));
     }

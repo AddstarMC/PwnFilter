@@ -21,6 +21,7 @@
 package com.pwn9.filter.bukkit;
 
 import com.pwn9.filter.engine.FilterService;
+import com.pwn9.filter.minecraft.api.MinecraftAPI;
 import com.pwn9.filter.minecraft.api.MinecraftConsole;
 
 import java.util.logging.Logger;
@@ -32,4 +33,6 @@ public interface PwnFilterPlugin {
     MinecraftConsole getConsole();
 
     Logger getLogger();
+
+    MinecraftAPI getApi();
 }

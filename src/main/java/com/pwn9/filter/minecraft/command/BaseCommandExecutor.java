@@ -20,7 +20,7 @@
 
 package com.pwn9.filter.minecraft.command;
 
-/**
+/*
  * This executor is designed to handle commands which have sub-commands.
  * It provides command completion and help from sub-commands.
  * <p>

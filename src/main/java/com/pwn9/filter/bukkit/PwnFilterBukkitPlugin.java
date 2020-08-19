@@ -27,6 +27,7 @@ import com.pwn9.filter.engine.FilterService;
 import com.pwn9.filter.engine.api.FilterClient;
 import com.pwn9.filter.engine.rules.action.minecraft.MinecraftAction;
 import com.pwn9.filter.engine.rules.action.targeted.TargetedAction;
+import com.pwn9.filter.minecraft.api.MinecraftAPI;
 import com.pwn9.filter.minecraft.api.MinecraftConsole;
 import com.pwn9.filter.minecraft.command.pfcls;
 import com.pwn9.filter.minecraft.command.pfmute;
@@ -198,6 +199,11 @@ public class PwnFilterBukkitPlugin extends JavaPlugin implements PwnFilterPlugin
     @Override
     public MinecraftConsole getConsole() {
         return console;
+    }
+
+    @Override
+    public MinecraftAPI getApi() {
+        return minecraftAPI;
     }
 
 }

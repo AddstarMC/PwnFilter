@@ -68,4 +68,5 @@ public interface MinecraftAPI {
 
     void executeCommand(String command);
 
+    boolean globalMute();
 }

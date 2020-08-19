@@ -20,7 +20,9 @@
 
 package com.pwn9.filter.minecraft.command;
 
+import com.pwn9.filter.bukkit.PwnFilterPlugin;
 import com.pwn9.filter.bukkit.config.BukkitConfig;
+import com.pwn9.filter.minecraft.api.MinecraftAPI;
 import com.pwn9.filter.minecraft.api.MinecraftConsole;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;

@@ -27,7 +27,7 @@ import com.pwn9.filter.engine.api.FilterContext;
 import com.pwn9.filter.engine.api.MessageAuthor;
 import com.pwn9.filter.engine.rules.Rule;
 import com.pwn9.filter.engine.rules.action.InvalidActionException;
-import org.bukkit.ChatColor;
+import com.pwn9.filter.util.PwnFormatter;
 
 /**
  * Add the configured number of points to the players account.
@@ -56,7 +56,7 @@ class Points implements Action {
         } catch (NumberFormatException e) {
             throw new InvalidActionException("'points' action did not have a valid amount.");
         }
-        message = (parts.length > 1) ? ChatColor.translateAlternateColorCodes('&', parts[1]) : "";
+        message = (parts.length > 1) ? PwnFormatter.legacyTextConverter(parts[1]) : "";
 
         return new Points(message, points);
     }
