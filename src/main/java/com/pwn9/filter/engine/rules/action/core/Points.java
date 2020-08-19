@@ -49,7 +49,7 @@ class Points implements Action {
     static Action getAction(String s) throws InvalidActionException {
         String[] parts;
         String message;
-        Double points;
+        double points;
         parts = s.split("\\s", 2);
         try {
             points = Double.parseDouble(parts[0]);

@@ -20,11 +20,15 @@
 
 package com.pwn9.filter.bukkit.listener;
 
+import com.pwn9.filter.bukkit.PwnFilterBukkitPlugin;
 import com.pwn9.filter.engine.FilterService;
 import com.pwn9.filter.engine.api.FilterClient;
-import com.pwn9.filter.engine.rules.chain.Chain;
+import com.pwn9.filter.engine.api.MessageAuthor;
 import com.pwn9.filter.engine.rules.chain.InvalidChainException;
 import com.pwn9.filter.engine.rules.chain.RuleChain;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 
@@ -48,8 +52,7 @@ abstract class BaseListener implements FilterClient, Listener {
     }
 
     RuleChain getCompiledChain(File ruleFile) throws InvalidChainException {
-        Chain newChain = filterService.parseRules(ruleFile);
-        return (RuleChain) newChain;
+        return filterService.parseRules(ruleFile);
     }
 
     @Override
@@ -62,9 +65,11 @@ abstract class BaseListener implements FilterClient, Listener {
         return ruleChain;
     }
 
-    public void loadRuleChain(File path) throws InvalidChainException {
-        ruleChain = getCompiledChain(path);
-    }
+// --Commented out by Inspection START (20/08/2020 2:38 am):
+//    public void loadRuleChain(File path) throws InvalidChainException {
+//        ruleChain = getCompiledChain(path);
+//    }
+// --Commented out by Inspection STOP (20/08/2020 2:38 am)
 
     void loadRuleChain(String name) throws InvalidChainException {
         ruleChain = getCompiledChain(filterService.getConfig().getRuleFile(name));
@@ -100,4 +105,14 @@ abstract class BaseListener implements FilterClient, Listener {
         }
     }
 
+    protected boolean checkIfSpam(MessageAuthor minecraftPlayer,String message, Cancellable event){
+        if (PwnFilterBukkitPlugin.lastMessage.containsKey(minecraftPlayer.getId()) && PwnFilterBukkitPlugin.lastMessage.get(minecraftPlayer.getId()).equals(message)) {
+            event.setCancelled(true);
+            minecraftPlayer.sendMessage(TextComponent.of("[PwnFilter] ").color(NamedTextColor.DARK_RED)
+                  .append(TextComponent.of("Repeated command blocked by spam filter.").color(NamedTextColor.RED)));
+            return true;
+        }
+        PwnFilterBukkitPlugin.lastMessage.put(minecraftPlayer.getId(), message);
+        return false;
+    }
 }

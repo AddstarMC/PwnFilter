@@ -419,6 +419,7 @@
                     </filters>
                     <artifactSet>
                         <includes>
+                            <include>net.kyori:*</include>
                             <include>org.bstats:bstats-bukkit</include>
                         </includes>
                     </artifactSet>
@@ -426,6 +427,10 @@
                         <relocation>
                             <pattern>org.bstats</pattern>
                             <shadedPattern>com.pwn9.filter.bstats</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>net.kyori</pattern>
+                            <shadedPattern>com.pwn9.filter.kyori</shadedPattern>
                         </relocation>
                     </relocations>
                 </configuration>

@@ -15,22 +15,25 @@ import java.util.List;
  */
 public class PwnClearScreen implements PwnFilterCommandExecutor {
 
-
+    private final MinecraftAPI api;
+    public PwnClearScreen(PwnFilterPlugin plugin) {
+        this.api = plugin.getApi();
+    }
     @Override
-    public boolean onCommand(CommandSender sender, String command, String... args) {
+    public boolean onCommand(CommandSender sender, String command,String alias, String... args) {
         sender.sendMessage(TextComponent.of("Clearing chat screen").color(NamedTextColor.DARK_RED));
         int i = 0;
         TextComponent.Builder messageBuilder = TextComponent.builder();
         while (i <= 120) {
-            messageBuilder.append(TextComponent.empty()).append(TextComponent.newline());
+            messageBuilder.append(TextComponent.of(" - ").append(TextComponent.newline()));
             i++;
         }
-        sender.sendMessage(messageBuilder.toString());
+        api.sendBroadCast(messageBuilder.build());
         return true;
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, String command, String... args) {
+    public List<String> onTabComplete(CommandSender sender, String command,String alias, String... args) {
         return Collections.emptyList();
     }
 }

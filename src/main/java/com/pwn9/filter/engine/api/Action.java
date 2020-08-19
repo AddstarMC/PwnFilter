@@ -21,7 +21,6 @@
 package com.pwn9.filter.engine.api;
 
 import com.pwn9.filter.engine.FilterService;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 /**
  * Actions are compiled into RuleChains for execution when matched by a rule.

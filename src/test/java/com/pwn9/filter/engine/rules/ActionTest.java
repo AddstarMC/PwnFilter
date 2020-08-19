@@ -41,7 +41,7 @@ public class ActionTest {
 
     private final TestAuthor author = new TestAuthor();
     private RuleChain rs;
-    private FilterService filterService = new FilterService();
+    private final FilterService filterService = new FilterService();
 
     @Before
     public void setUp() {

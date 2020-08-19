@@ -10,7 +10,7 @@ import java.util.List;
  */
 public interface PwnFilterCommandExecutor {
 
-    boolean onCommand(CommandSender sender, String command, String... args);
+    boolean onCommand(CommandSender sender, String command,String alias, String... args);
 
-    List<String> onTabComplete(CommandSender sender, String command, String... args);
+    List<String> onTabComplete(CommandSender sender, String command, String alias, String... args);
 }

@@ -35,4 +35,6 @@ public interface PwnFilterPlugin {
     Logger getLogger();
 
     MinecraftAPI getApi();
+
+    boolean configurePlugin();
 }

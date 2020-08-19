@@ -26,7 +26,7 @@ import org.junit.Before;
 public class BaseListenerTest {
 
     private BaseListener test;
-    private FilterService filterService = new FilterService();
+    private final FilterService filterService = new FilterService();
 
     @Before
     public void setup() {

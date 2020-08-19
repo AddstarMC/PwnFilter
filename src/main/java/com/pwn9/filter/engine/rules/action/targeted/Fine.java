@@ -50,7 +50,7 @@ class Fine implements Action {
      */
     public static Action getAction(String s) throws InvalidActionException {
         String[] parts;
-        Double fineAmount;
+        double fineAmount;
 
         parts = s.split("\\s", 2);
         try {

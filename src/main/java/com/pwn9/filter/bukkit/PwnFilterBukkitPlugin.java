@@ -21,17 +21,17 @@
 package com.pwn9.filter.bukkit;
 
 import com.google.common.collect.MapMaker;
+import com.pwn9.filter.bukkit.commands.PwnFilterCommands;
 import com.pwn9.filter.bukkit.config.BukkitConfig;
 import com.pwn9.filter.bukkit.listener.*;
 import com.pwn9.filter.engine.FilterService;
 import com.pwn9.filter.engine.api.FilterClient;
 import com.pwn9.filter.engine.rules.action.minecraft.MinecraftAction;
 import com.pwn9.filter.engine.rules.action.targeted.TargetedAction;
-import com.pwn9.filter.minecraft.api.MinecraftAPI;
 import com.pwn9.filter.minecraft.api.MinecraftConsole;
-import com.pwn9.filter.minecraft.command.pfcls;
-import com.pwn9.filter.minecraft.command.pfmute;
-import com.pwn9.filter.minecraft.command.pfreload;
+import com.pwn9.filter.minecraft.command.PwnClearScreen;
+import com.pwn9.filter.minecraft.command.PwnFilterMute;
+import com.pwn9.filter.minecraft.command.PwnFilterReload;
 import com.pwn9.filter.util.tag.RegisterTags;
 import net.milkbowl.vault.economy.Economy;
 import org.bstats.bukkit.Metrics;
@@ -60,9 +60,9 @@ public class PwnFilterBukkitPlugin extends JavaPlugin implements PwnFilterPlugin
     public static final ConcurrentMap<UUID, String> lastMessage = new MapMaker().concurrencyLevel(2).weakKeys().makeMap();
     static Economy economy = null;
     private static PwnFilterBukkitPlugin _instance;
-    private BukkitAPI minecraftAPI;
-    private MinecraftConsole console;
-    private FilterService filterService;
+    private final BukkitAPI minecraftAPI;
+    private final MinecraftConsole console;
+    private final FilterService filterService;
     private final Map<String, Integer > eventRules = new HashMap<>();
 
 
@@ -138,9 +138,10 @@ public class PwnFilterBukkitPlugin extends JavaPlugin implements PwnFilterPlugin
         filterService.enableClients();
 
         // Set up Command Handlers
-        getCommand("pfreload").setExecutor(new pfreload(filterService, this));
-        getCommand("pfcls").setExecutor(new pfcls(getLogger(), console));
-        getCommand("pfmute").setExecutor(new pfmute(getLogger(), console));
+        PwnFilterCommands commands = new PwnFilterCommands(this);
+        commands.registerCommands("pfreload",new PwnFilterReload(filterService,this));
+        commands.registerCommands("pfcls",new PwnClearScreen(this));
+        commands.registerCommands("pfmute",new PwnFilterMute(this));
         for (final FilterClient f : filterService.getActiveClients()) {
             final String eventName = f.getShortName();
             int value = f.getRuleChain().ruleCount();
@@ -202,7 +203,7 @@ public class PwnFilterBukkitPlugin extends JavaPlugin implements PwnFilterPlugin
     }
 
     @Override
-    public MinecraftAPI getApi() {
+    public BukkitAPI getApi() {
         return minecraftAPI;
     }
 

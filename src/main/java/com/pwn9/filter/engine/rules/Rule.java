@@ -219,7 +219,7 @@ public class Rule implements ChainEntry {
      */
     public boolean isValid() {
         // Check that we have a valid pattern and at least one action
-        return this.pattern != null && this.actions != null;
+        return this.pattern != null;
     }
 
     /**
@@ -238,7 +238,11 @@ public class Rule implements ChainEntry {
      * @return a boolean.
      */
     public boolean addCondition(Condition c) {
-        return c != null && conditions.add(c);
+        if (c == null) {
+            return false;
+        }
+        conditions.add(c);
+        return true;
     }
 
     /**

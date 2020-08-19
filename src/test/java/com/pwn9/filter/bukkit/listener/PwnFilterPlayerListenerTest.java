@@ -25,7 +25,6 @@ import com.pwn9.filter.MockPlugin;
 import com.pwn9.filter.bukkit.PwnFilterPlugin;
 import com.pwn9.filter.bukkit.config.BukkitConfig;
 import com.pwn9.filter.engine.FilterService;
-import com.pwn9.filter.engine.rules.TestAuthor;
 import com.pwn9.filter.engine.rules.action.minecraft.MinecraftAction;
 import com.pwn9.filter.engine.rules.action.targeted.TargetedAction;
 import org.bukkit.configuration.Configuration;
@@ -40,6 +39,7 @@ import java.io.File;
 import java.util.HashSet;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -54,7 +54,7 @@ import static org.junit.Assert.assertTrue;
 public class PwnFilterPlayerListenerTest {
 
     private final File resourcesDir = new File(getClass().getResource("/config.yml").getFile()).getParentFile();
-    private Player mockPlayer = new MockPlayer();
+    private final Player mockPlayer = new MockPlayer();
     private AsyncPlayerChatEvent chatEvent;
     private Configuration testConfig;
     private FilterService filterService;
@@ -70,7 +70,7 @@ public class PwnFilterPlayerListenerTest {
         testConfig = YamlConfiguration.loadConfiguration(new File(getClass().getResource("/config.yml").getFile()));
         filterService.getActionFactory().addActionTokens(MinecraftAction.class);
         filterService.getActionFactory().addActionTokens(TargetedAction.class);
-        filterService.registerAuthorService(uuid -> new TestAuthor());
+        filterService.registerAuthorService(MockPlugin.getMockAuthorService());
         BukkitConfig.loadConfiguration(testConfig, resourcesDir, filterService);
         BukkitConfig.setGlobalMute(false); // To ensure it gets reset between tests.
     }
@@ -125,7 +125,7 @@ public class PwnFilterPlayerListenerTest {
         chatEvent = new AsyncPlayerChatEvent(true, mockPlayer, input, new HashSet<>());
         playerListener.loadRuleChain("actionTests.txt");
         playerListener.onPlayerChat(chatEvent);
-        assertTrue(!chatEvent.isCancelled());
+        assertFalse(chatEvent.isCancelled());
         assertEquals(chatEvent.getMessage(), "HEY! this should all get lowered.");
     }
 

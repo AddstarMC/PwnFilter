@@ -23,7 +23,7 @@ package com.pwn9.filter.bukkit;
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Ticker;
 import com.pwn9.filter.engine.api.CommandSender;
-import com.pwn9.filter.engine.api.MessageAuthor;
+import com.pwn9.filter.engine.api.Player;
 import com.pwn9.filter.engine.rules.action.targeted.BurnTarget;
 import com.pwn9.filter.engine.rules.action.targeted.FineTarget;
 import com.pwn9.filter.engine.rules.action.targeted.KickTarget;
@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * Created by Sage905 on 15-08-31.
  */
-public class BukkitPlayer implements MessageAuthor, CommandSender, FineTarget, BurnTarget, KillTarget, KickTarget {
+public class BukkitPlayer implements Player, CommandSender, FineTarget, BurnTarget, KillTarget, KickTarget {
 
     static final int MAX_CACHE_AGE_SECS = 60; //
 
@@ -138,7 +138,7 @@ public class BukkitPlayer implements MessageAuthor, CommandSender, FineTarget, B
 
     @Override
     public void sendMessage(TextComponent message) {
-        BukkitAPI.audiences().player(playerId).sendMessage(message);
+        minecraftAPI.audiences().player(playerId).sendMessage(message);
     }
 
     public void executeCommand(final String command) {
@@ -157,4 +157,8 @@ public class BukkitPlayer implements MessageAuthor, CommandSender, FineTarget, B
         minecraftAPI.kill(playerId, messageString);
     }
 
+    @Override
+    public String getPlace() {
+        return minecraftAPI.getPlayerWorldName(playerId);
+    }
 }

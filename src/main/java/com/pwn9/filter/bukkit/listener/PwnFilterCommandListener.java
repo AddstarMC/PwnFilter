@@ -27,8 +27,6 @@ import com.pwn9.filter.engine.api.MessageAuthor;
 import com.pwn9.filter.engine.rules.chain.InvalidChainException;
 import com.pwn9.filter.engine.rules.chain.RuleChain;
 import com.pwn9.filter.minecraft.util.ColoredString;
-import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
@@ -122,13 +120,9 @@ public class PwnFilterCommandListener extends BaseListener {
             // Simple Spam filter
             if (BukkitConfig.commandspamfilterEnabled() && !minecraftPlayer.hasPermission("pwnfilter.bypass.spam")) {
                 // Keep a log of the last message sent by this player.  If it's the same as the current message, cancel.
-                if (PwnFilterBukkitPlugin.lastMessage.containsKey(minecraftPlayer.getId()) && PwnFilterBukkitPlugin.lastMessage.get(minecraftPlayer.getId()).equals(message)) {
-                    event.setCancelled(true);
-                    minecraftPlayer.sendMessage(TextComponent.of("[PwnFilter] ").color(NamedTextColor.DARK_RED)
-                            .append(TextComponent.of("Repeated command blocked by spam filter.").color(NamedTextColor.RED)));
+                if(checkIfSpam(minecraftPlayer,message,event)){
                     return;
                 }
-                PwnFilterBukkitPlugin.lastMessage.put(minecraftPlayer.getId(), message);
             }
 
             chatRuleChain.execute(filterTask, filterService);

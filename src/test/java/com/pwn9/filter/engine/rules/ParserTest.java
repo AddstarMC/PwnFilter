@@ -50,9 +50,9 @@ import static org.junit.Assert.*;
 public class ParserTest {
 
     private RuleChain rs;
-    private FilterService filterService = new FilterService();
-    private File testFile = new File(getClass().getResource("/testrules.txt").getFile());
-    private File parentDir = new File(testFile.getParent());
+    private final FilterService filterService = new FilterService();
+    private final File testFile = new File(getClass().getResource("/testrules.txt").getFile());
+    private final File parentDir = new File(testFile.getParent());
 
     @Before
     public void setUp() {

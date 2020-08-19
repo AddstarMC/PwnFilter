@@ -20,6 +20,10 @@
 
 package com.pwn9.filter;
 
+import com.pwn9.filter.engine.api.CommandSender;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
@@ -40,13 +44,15 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.util.Vector;
+import org.jetbrains.annotations.NotNull;
 
 import java.net.InetSocketAddress;
 import java.util.*;
 
-public class MockPlayer implements Player {
+public class MockPlayer implements Player, com.pwn9.filter.engine.api.Player, CommandSender {
 
     private final UUID randomID = UUID.randomUUID();
+    private final Queue<String> messages = new LinkedList<>();
 
     @Override
     public String getDisplayName() {
@@ -110,7 +116,7 @@ public class MockPlayer implements Player {
 
     @Override
     public void sendRawMessage(String s) {
-
+        messages.add(s);
     }
 
     @Override
@@ -625,12 +631,22 @@ public class MockPlayer implements Player {
 
     @Override
     public void sendMessage(String s) {
+        messages.add(s);
+    }
 
+    @Override
+    public void sendMessages(List<String> messages) {
+        this.messages.addAll(messages);
+    }
+
+    @Override
+    public void sendMessage(TextComponent message) {
+        messages.add(LegacyComponentSerializer.legacyAmpersand().serialize(message));
     }
 
     @Override
     public void sendMessage(String[] strings) {
-
+        messages.add(StringUtils.join(strings," "));
     }
 
     @Override
@@ -917,8 +933,13 @@ public class MockPlayer implements Player {
     }
 
     @Override
-    public String getName() {
+    public @NotNull String getName() {
         return "Pwn9";
+    }
+
+    @Override
+    public UUID getId() {
+        return getUniqueId();
     }
 
     @Override
@@ -1414,5 +1435,22 @@ public class MockPlayer implements Player {
     @Override
     public <T extends Projectile> T launchProjectile(Class<? extends T> aClass, Vector vector) {
         return null;
+    }
+
+    @Override
+    public String getPlace() {
+        return getWorld().getName();
+    }
+
+    public String getMessage(){
+        return messages.poll();
+    }
+
+    public void clearMessages(){
+        messages.clear();
+    }
+
+    public Queue<String> getAllMessages(){
+        return messages;
     }
 }

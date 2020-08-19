@@ -20,14 +20,16 @@
 
 package com.pwn9.filter.engine.rules;
 
+import com.pwn9.filter.engine.api.CommandSender;
 import com.pwn9.filter.engine.api.MessageAuthor;
 import com.pwn9.filter.engine.rules.action.targeted.BurnTarget;
+import net.kyori.adventure.text.TextComponent;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.UUID;
 
-public class TestAuthor implements MessageAuthor, BurnTarget {
+public class TestAuthor implements MessageAuthor, BurnTarget, CommandSender {
 
     private final UUID id;
     private boolean burnt;
@@ -62,6 +64,11 @@ public class TestAuthor implements MessageAuthor, BurnTarget {
 
     @Override
     public void sendMessages(List<String> messages) {
+    }
+
+    @Override
+    public void sendMessage(TextComponent message) {
+
     }
 
     @Override
