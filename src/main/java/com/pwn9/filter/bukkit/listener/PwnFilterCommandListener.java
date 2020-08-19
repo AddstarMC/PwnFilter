@@ -21,6 +21,7 @@
 package com.pwn9.filter.bukkit.listener;
 
 import com.pwn9.filter.bukkit.PwnFilterBukkitPlugin;
+import com.pwn9.filter.bukkit.PwnFilterPlugin;
 import com.pwn9.filter.bukkit.config.BukkitConfig;
 import com.pwn9.filter.engine.api.FilterContext;
 import com.pwn9.filter.engine.api.MessageAuthor;
@@ -39,13 +40,11 @@ import org.bukkit.plugin.PluginManager;
  * @author Sage905
  * @version $Id: $Id
  */
-public class PwnFilterCommandListener extends BaseListener {
-    private final PwnFilterBukkitPlugin plugin;
+public class PwnFilterCommandListener extends AbstractBukkitListener {
     private RuleChain chatRuleChain;
 
-    public PwnFilterCommandListener(PwnFilterBukkitPlugin plugin) {
-        super(plugin.getFilterService());
-        this.plugin = plugin;
+    public PwnFilterCommandListener(PwnFilterPlugin plugin) {
+        super(plugin);
     }
 
     public String getShortName() {
@@ -118,11 +117,11 @@ public class PwnFilterCommandListener extends BaseListener {
             }
 
             // Simple Spam filter
-            if (BukkitConfig.commandspamfilterEnabled() && !minecraftPlayer.hasPermission("pwnfilter.bypass.spam")) {
+            if (BukkitConfig.commandspamfilterEnabled()
+                  && !minecraftPlayer.hasPermission("pwnfilter.bypass.spam")
+                  && checkIfSpam(minecraftPlayer,message,event)) {
                 // Keep a log of the last message sent by this player.  If it's the same as the current message, cancel.
-                if(checkIfSpam(minecraftPlayer,message,event)){
-                    return;
-                }
+                return;
             }
 
             chatRuleChain.execute(filterTask, filterService);

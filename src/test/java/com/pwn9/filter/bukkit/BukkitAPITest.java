@@ -60,7 +60,7 @@ public class BukkitAPITest {
     }
 
     @Test
-    public void getAuthorByIdReturnsNullForNoMatch() throws Exception {
+    public void getAuthorByIdReturnsNullForNoMatch() {
         server.setPrimaryThread(Thread.currentThread());
         server.setScheduler(new WorkingScheduler());
         server.setPlayer(null);

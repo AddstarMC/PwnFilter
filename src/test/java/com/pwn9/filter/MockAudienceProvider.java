@@ -69,6 +69,6 @@ public class MockAudienceProvider implements AudienceProvider {
 
     @Override
     public void close() {
-
+            //not required
     }
 }

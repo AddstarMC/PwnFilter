@@ -2,7 +2,8 @@ package com.pwn9.filter.engine.api;
 
 /**
  * A player is a in game person that can be considered to be really present - ie not on console.
- * Created by Narimm on 19/08/2020.
+ * @author Narimm
+ * on 19/08/2020.
  */
 public interface Player extends MessageAuthor, CommandSender{
 

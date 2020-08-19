@@ -9,7 +9,8 @@ import java.util.List;
 
 /**
  * Created for use for the Add5tar MC Minecraft server
- * Created by benjamincharlton on 19/08/2020.
+ * @author Narimm
+ * on 19/08/2020.
  */
 public class PwnFilterReload implements PwnFilterCommandExecutor {
     private final FilterService filterService;

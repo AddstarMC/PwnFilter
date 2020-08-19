@@ -39,9 +39,9 @@ import java.util.stream.Collectors;
  */
 @SuppressWarnings("UnusedDeclaration")
 public class Respond implements Action {
-    private final List<String> messageStrings;
+    protected final List<String> messageStrings;
 
-    private Respond(List<String> messageStrings) {
+    protected Respond(List<String> messageStrings) {
         this.messageStrings = messageStrings;
     }
 
@@ -49,7 +49,7 @@ public class Respond implements Action {
      * {@inheritDoc}
      */
     public static Action getAction(String s) {
-        ArrayList<String> messageStrings = new ArrayList<>();
+        List<String> messageStrings = new ArrayList<>();
 
         for (String message : s.split("\n")) {
             messageStrings.add(PwnFormatter.legacyTextConverter(message));
@@ -62,13 +62,13 @@ public class Respond implements Action {
      */
     public void execute(final FilterContext filterTask, FilterService filterService) {
         if (filterTask.getAuthor() == null) return;
-
         final ArrayList<String> preparedMessages = messageStrings.stream().map(message -> TagRegistry.replaceTags(message, filterTask)).collect(Collectors.toCollection(ArrayList::new));
 
         filterTask.getAuthor().sendMessages(preparedMessages);
 
         filterTask.addLogMessage("Responded to " + filterTask.getAuthor().getName()
                 + " with: " + preparedMessages.get(0) + "...");
+
 
     }
 }

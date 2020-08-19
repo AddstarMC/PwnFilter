@@ -36,12 +36,10 @@ import org.bukkit.plugin.PluginManager;
 /**
  * Listen for Chat events and apply the filter.
  */
-public class PwnFilterPlayerListener extends BaseListener {
-    private final PwnFilterPlugin plugin;
+public class PwnFilterPlayerListener extends AbstractBukkitListener {
 
     public PwnFilterPlayerListener(PwnFilterPlugin plugin) {
-        super(plugin.getFilterService());
-        this.plugin = plugin;
+        super(plugin);
     }
 
     public String getShortName() {
@@ -50,14 +48,16 @@ public class PwnFilterPlayerListener extends BaseListener {
 
     void onPlayerChat(AsyncPlayerChatEvent event) {
 
-        if (event.isCancelled()) return;
+        if (event.isCancelled()) {
+            return;
+        }
 
         MessageAuthor minecraftPlayer = plugin.getFilterService().getAuthor((event.getPlayer().getUniqueId()));
 
         // This should never happen.  Log it, if it does.
         if (minecraftPlayer instanceof UnknownAuthor) {
             plugin.getLogger().info("Filtering Aborted. Unable to lookup player in Chat Event.  PlayerUUID: "
-                    + event.getPlayer().getUniqueId());
+                  + event.getPlayer().getUniqueId());
             plugin.getLogger().info("Message: " + event.getMessage());
             plugin.getLogger().info("AuthorServices: " + filterService.getAuthorServices());
             plugin.getLogger().info("Bukkit player online: " + event.getPlayer().isOnline());
@@ -65,21 +65,24 @@ public class PwnFilterPlayerListener extends BaseListener {
         }
 
         // Permissions Check, if player has bypass permissions, then skip everything.
-        if (minecraftPlayer.hasPermission("pwnfilter.bypass.chat")) return;
+        if (minecraftPlayer.hasPermission("pwnfilter.bypass.chat")) {
+            return;
+        }
 
         String message = event.getMessage();
 
         // Global mute
-        if ((BukkitConfig.globalMute()) && (!minecraftPlayer.hasPermission("pwnfilter.bypass.mute"))) {
+        if ((plugin.getApi().globalMute()) && (!minecraftPlayer.hasPermission("pwnfilter.bypass.mute"))) {
             event.setCancelled(true);
             return; // No point in continuing.
         }
 
-        if (BukkitConfig.spamfilterEnabled() && !minecraftPlayer.hasPermission("pwnfilter.bypass.spam")) {
+        if (BukkitConfig.spamfilterEnabled()
+              && !minecraftPlayer.hasPermission("pwnfilter.bypass.spam")
+              && checkIfSpam(minecraftPlayer, message, event)) {
             // Keep a log of the last message sent by this player.  If it's the same as the current message, cancel.
-            if (checkIfSpam(minecraftPlayer,message,event)) {
-                return;
-            }
+            return;
+
         }
 
         FilterContext state = new FilterContext(new ColoredString(message), minecraftPlayer, this);
@@ -98,7 +101,9 @@ public class PwnFilterPlayerListener extends BaseListener {
         if (state.messageChanged()) {
             event.setMessage(state.getModifiedMessage().getRaw());
         }
-        if (state.isCancelled()) event.setCancelled(true);
+        if (state.isCancelled()) {
+            event.setCancelled(true);
+        }
     }
 
     /**
@@ -114,7 +119,9 @@ public class PwnFilterPlayerListener extends BaseListener {
     @Override
     public void activate() {
 
-        if (isActive()) return;
+        if (isActive()) {
+            return;
+        }
 
         try {
 
@@ -124,10 +131,10 @@ public class PwnFilterPlayerListener extends BaseListener {
 
             /* Hook up the Listener for PlayerChat events */
             pm.registerEvent(AsyncPlayerChatEvent.class, this, BukkitConfig.getChatpriority(),
-                    (l, e) -> onPlayerChat((AsyncPlayerChatEvent) e), PwnFilterBukkitPlugin.getInstance());
+                  (l, e) -> onPlayerChat((AsyncPlayerChatEvent) e), PwnFilterBukkitPlugin.getInstance());
 
             plugin.getLogger().info("Activated PlayerListener with Priority Setting: " + BukkitConfig.getChatpriority().toString()
-                    + " Rule Count: " + getRuleChain().ruleCount());
+                  + " Rule Count: " + getRuleChain().ruleCount());
 
             setActive();
         } catch (InvalidChainException e) {

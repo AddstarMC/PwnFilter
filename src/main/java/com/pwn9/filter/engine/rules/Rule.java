@@ -25,8 +25,14 @@ import com.pwn9.filter.engine.api.Action;
 import com.pwn9.filter.engine.api.FilterContext;
 import com.pwn9.filter.engine.rules.chain.ChainEntry;
 import com.pwn9.filter.util.LimitedRegexCharSequence;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -34,7 +40,7 @@ import java.util.regex.Pattern;
 /**
  * Rule object
  * <p>
- * Each Rule has a single match Pattern, an ArrayList of {@link com.pwn9.filter.engine.rules.Condition}'s and an ArrayList of {@link Action}'s
+ * Each Rule has a single match Pattern, an ArrayList of {@link Condition}'s and an ArrayList of {@link Action}'s
  *
  * @author Sage905
  * @version $Id: $Id
@@ -58,7 +64,7 @@ public class Rule implements ChainEntry {
     /**
      * <p>Constructor for Rule.</p>
      *
-     * @param matchStr a {@link java.lang.String} object.
+     * @param matchStr a {@link String} object.
      */
     public Rule(String matchStr) {
         this.pattern = Pattern.compile(matchStr, Pattern.CASE_INSENSITIVE);
@@ -67,8 +73,8 @@ public class Rule implements ChainEntry {
     /**
      * <p>Constructor for Rule.</p>
      *
-     * @param id          a {@link java.lang.String} object.
-     * @param description a {@link java.lang.String} object.
+     * @param id          a {@link String} object.
+     * @param description a {@link String} object.
      */
     public Rule(String id, String description) {
         this.id = id;
@@ -78,7 +84,7 @@ public class Rule implements ChainEntry {
     /**
      * <p>Getter for the field <code>pattern</code>.</p>
      *
-     * @return a {@link java.util.regex.Pattern} object.
+     * @return a {@link Pattern} object.
      */
     public Pattern getPattern() {
         return pattern;
@@ -87,7 +93,7 @@ public class Rule implements ChainEntry {
     /**
      * <p>Setter for the field <code>pattern</code>.</p>
      *
-     * @param pattern a {@link java.lang.String} object.
+     * @param pattern a {@link String} object.
      */
     public void setPattern(String pattern) {
         this.pattern = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
@@ -96,7 +102,7 @@ public class Rule implements ChainEntry {
     /**
      * <p>Getter for the field <code>description</code>.</p>
      *
-     * @return a {@link java.lang.String} object.
+     * @return a {@link String} object.
      */
     public String getDescription() {
         return description;
@@ -105,7 +111,7 @@ public class Rule implements ChainEntry {
     /**
      * <p>Setter for the field <code>description</code>.</p>
      *
-     * @param description a {@link java.lang.String} object.
+     * @param description a {@link String} object.
      */
     public void setDescription(String description) {
         this.description = description;
@@ -114,7 +120,7 @@ public class Rule implements ChainEntry {
     /**
      * <p>Getter for the field <code>id</code>.</p>
      *
-     * @return a {@link java.lang.String} object.
+     * @return a {@link String} object.
      */
     public String getId() {
         return id;
@@ -123,7 +129,7 @@ public class Rule implements ChainEntry {
     /**
      * <p>Setter for the field <code>id</code>.</p>
      *
-     * @param id a {@link java.lang.String} object.
+     * @param id a {@link String} object.
      */
     public void setId(String id) {
         this.id = id;
@@ -166,7 +172,7 @@ public class Rule implements ChainEntry {
                 filterContext.getModifiedMessage().toString() + "'");
 
         // Check if action matches the current state of the message
-        LimitedRegexCharSequence limitedRegexCharSequence =
+        CharSequence limitedRegexCharSequence =
                 new LimitedRegexCharSequence(filterContext.getModifiedMessage().toString(), 1000);
         final Matcher matcher = pattern.matcher(limitedRegexCharSequence);
 
@@ -225,7 +231,7 @@ public class Rule implements ChainEntry {
     /**
      * <p>toString.</p>
      *
-     * @return a {@link java.lang.String} object.
+     * @return a {@link String} object.
      */
     public String toString() {
         return pattern.toString();
@@ -234,7 +240,7 @@ public class Rule implements ChainEntry {
     /**
      * <p>addCondition.</p>
      *
-     * @param c a {@link com.pwn9.filter.engine.rules.Condition} object.
+     * @param c a {@link Condition} object.
      * @return a boolean.
      */
     public boolean addCondition(Condition c) {
@@ -248,7 +254,7 @@ public class Rule implements ChainEntry {
     /**
      * <p>addConditions.</p>
      *
-     * @param conditionList a {@link java.util.Collection} object.
+     * @param conditionList a {@link Collection} object.
      * @return a boolean.
      */
     public boolean addConditions(Collection<Condition> conditionList) {
@@ -258,7 +264,7 @@ public class Rule implements ChainEntry {
     /**
      * <p>Getter for the field <code>conditions</code>.</p>
      *
-     * @return a {@link java.util.List} object.
+     * @return a {@link List} object.
      */
     public List<Condition> getConditions() {
         return conditions;
@@ -277,7 +283,7 @@ public class Rule implements ChainEntry {
     /**
      * <p>addActions.</p>
      *
-     * @param actionList a {@link java.util.Collection} object.
+     * @param actionList a {@link Collection} object.
      * @return a boolean.
      */
     public boolean addActions(Collection<Action> actionList) {
@@ -287,7 +293,7 @@ public class Rule implements ChainEntry {
     /**
      * <p>Getter for the field <code>actions</code>.</p>
      *
-     * @return a {@link java.util.List} object.
+     * @return a {@link List} object.
      */
     public List<Action> getActions() {
         return actions;

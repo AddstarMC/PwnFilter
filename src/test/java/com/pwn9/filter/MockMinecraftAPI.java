@@ -108,17 +108,17 @@ public class MockMinecraftAPI implements MinecraftAPI {
 
     @Override
     public void sendConsoleMessage(String message) {
-
+        //todo
     }
 
     @Override
     public void sendConsoleMessage(TextComponent message) {
-
+       //todo
     }
 
     @Override
     public void sendConsoleMessages(List<String> messageList) {
-
+        //todo
     }
 
     @Override

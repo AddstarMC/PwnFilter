@@ -47,11 +47,10 @@ import java.util.stream.Stream;
  * @version $Id: $Id
  */
 
-class RespondFile implements Action {
-    private final List<String> messageStrings;
+class RespondFile extends Respond {
 
     private RespondFile(List<String> messageStrings) {
-        this.messageStrings = messageStrings;
+        super(messageStrings);
     }
 
     public static Action getAction(String s, File sourceDir) throws InvalidActionException {
@@ -72,18 +71,6 @@ class RespondFile implements Action {
         }
 
         return new RespondFile(ImmutableList.copyOf(messageStrings));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public void execute(final FilterContext filterTask, FilterService filterService) {
-        final ArrayList<String> preparedMessages = messageStrings.stream().map(message -> TagRegistry.replaceTags(message, filterTask)).collect(Collectors.toCollection(ArrayList::new));
-
-        filterTask.getAuthor().sendMessages(preparedMessages);
-
-        filterTask.addLogMessage("Responded to " + filterTask.getAuthor().getName() + " with: " + preparedMessages.get(0) + "...");
-
     }
 }
 

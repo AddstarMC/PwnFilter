@@ -57,6 +57,7 @@ import java.util.concurrent.ConcurrentMap;
  */
 
 public class PwnFilterBukkitPlugin extends JavaPlugin implements PwnFilterPlugin, TemplateProvider {
+
     public static final ConcurrentMap<UUID, String> lastMessage = new MapMaker().concurrencyLevel(2).weakKeys().makeMap();
     static Economy economy = null;
     private static PwnFilterBukkitPlugin _instance;
@@ -177,6 +178,16 @@ public class PwnFilterBukkitPlugin extends JavaPlugin implements PwnFilterPlugin
             getPluginLoader().disablePlugin(this);
         }
         return false;
+    }
+
+    @Override
+    public boolean checkRecentMessage(UUID uuid, String message) {
+        return (PwnFilterBukkitPlugin.lastMessage.containsKey(uuid) && PwnFilterBukkitPlugin.lastMessage.get(uuid).equals(message));
+    }
+
+    @Override
+    public void addRecentMessage(UUID uuid, String string) {
+        lastMessage.put(uuid,string);
     }
 
     private void setupEconomy() {
