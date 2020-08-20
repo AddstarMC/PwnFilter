@@ -68,7 +68,8 @@ public class BukkitAPI implements MinecraftAPI, AuthorService, NotifyTarget {
     from the main thread while there is an outstanding request.
      */
 
-    BukkitAPI(PwnFilterPlugin p) {
+    @SuppressWarnings({"Unsafe", "WeakerAccess"})
+    protected BukkitAPI(PwnFilterPlugin p) {
         plugin = p;
         if(p instanceof PwnFilterBukkitPlugin) {
             audiences = BukkitAudiences.create((PwnFilterBukkitPlugin) p);
@@ -368,6 +369,7 @@ public class BukkitAPI implements MinecraftAPI, AuthorService, NotifyTarget {
         });
 
     }
+    @SuppressWarnings("WeakerAccess")
     public static BukkitAudiences bukkitAudiences(){
         return audiences;
     }

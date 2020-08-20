@@ -24,15 +24,16 @@ import com.pwn9.filter.engine.api.CommandSender;
 import com.pwn9.filter.engine.api.MessageAuthor;
 import com.pwn9.filter.engine.rules.action.targeted.BurnTarget;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class TestAuthor implements MessageAuthor, BurnTarget, CommandSender {
 
     private final UUID id;
     private boolean burnt;
+    private Collection<String> messages = new LinkedList<>();
 
     public TestAuthor() {
         id = UUID.randomUUID();
@@ -55,6 +56,7 @@ public class TestAuthor implements MessageAuthor, BurnTarget, CommandSender {
 
     @Override
     public void sendMessage(String message) {
+        this.messages.add(message);
     }
 
     @Override
@@ -64,11 +66,12 @@ public class TestAuthor implements MessageAuthor, BurnTarget, CommandSender {
 
     @Override
     public void sendMessages(List<String> messages) {
+        this.messages.addAll(messages);
     }
 
     @Override
     public void sendMessage(TextComponent message) {
-
+        this.messages.add(LegacyComponentSerializer.legacyAmpersand().serialize(message));
     }
 
     @Override
