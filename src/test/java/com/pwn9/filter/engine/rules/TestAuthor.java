@@ -33,7 +33,7 @@ public class TestAuthor implements MessageAuthor, BurnTarget, CommandSender {
 
     private final UUID id;
     private boolean burnt;
-    private Collection<String> messages = new LinkedList<>();
+    private final Collection<String> messages = new LinkedList<>();
 
     public TestAuthor() {
         id = UUID.randomUUID();
@@ -74,6 +74,9 @@ public class TestAuthor implements MessageAuthor, BurnTarget, CommandSender {
         this.messages.add(LegacyComponentSerializer.legacyAmpersand().serialize(message));
     }
 
+    public Collection<String> getMessages(){
+        return messages;
+    }
     @Override
     public boolean burn(int duration, String message) {
         return burnt = true;

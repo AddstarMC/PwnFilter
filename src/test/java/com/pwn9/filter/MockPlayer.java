@@ -14,16 +14,10 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- *
  */
 
 package com.pwn9.filter;
 
-import com.pwn9.filter.engine.api.CommandSender;
-import net.kyori.adventure.text.TextComponent;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.Achievement;
 import org.bukkit.Effect;
 import org.bukkit.EntityEffect;
@@ -69,19 +63,15 @@ import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.InetSocketAddress;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
 
-public class MockPlayer implements Player, com.pwn9.filter.engine.api.Player, CommandSender {
-
-    private final UUID randomID = UUID.randomUUID();
-    private final Queue<String> messages = new LinkedList<>();
+public class MockPlayer extends PwnPlayer implements Player {
 
     @Override
     public String getDisplayName() {
@@ -659,23 +649,8 @@ public class MockPlayer implements Player, com.pwn9.filter.engine.api.Player, Co
     }
 
     @Override
-    public void sendMessage(String s) {
-        messages.add(s);
-    }
-
-    @Override
-    public void sendMessages(List<String> messages) {
-        this.messages.addAll(messages);
-    }
-
-    @Override
-    public void sendMessage(TextComponent message) {
-        messages.add(LegacyComponentSerializer.legacyAmpersand().serialize(message));
-    }
-
-    @Override
     public void sendMessage(String[] strings) {
-        messages.add(StringUtils.join(strings," "));
+        messages.addAll(Arrays.asList(strings));
     }
 
     @Override
@@ -725,7 +700,7 @@ public class MockPlayer implements Player, com.pwn9.filter.engine.api.Player, Co
 
     @Override
     public UUID getUniqueId() {
-        return randomID;
+        return getId();
     }
 
     @Override
@@ -964,11 +939,6 @@ public class MockPlayer implements Player, com.pwn9.filter.engine.api.Player, Co
     @Override
     public @NotNull String getName() {
         return "Pwn9";
-    }
-
-    @Override
-    public UUID getId() {
-        return getUniqueId();
     }
 
     @Override
@@ -1471,15 +1441,4 @@ public class MockPlayer implements Player, com.pwn9.filter.engine.api.Player, Co
         return getWorld().getName();
     }
 
-    public String getMessage(){
-        return messages.poll();
-    }
-
-    public void clearMessages(){
-        messages.clear();
-    }
-
-    public Queue<String> getAllMessages(){
-        return messages;
-    }
 }

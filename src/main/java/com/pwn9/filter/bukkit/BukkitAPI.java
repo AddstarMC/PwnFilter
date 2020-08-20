@@ -44,7 +44,11 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Handles keeping a cache of data that we need during Async event handling.
@@ -68,15 +72,20 @@ public class BukkitAPI implements MinecraftAPI, AuthorService, NotifyTarget {
     from the main thread while there is an outstanding request.
      */
 
-    @SuppressWarnings({"Unsafe", "WeakerAccess"})
+    @SuppressWarnings("WeakerAccess")
     protected BukkitAPI(PwnFilterPlugin p) {
-        plugin = p;
-        if(p instanceof PwnFilterBukkitPlugin) {
-            audiences = BukkitAudiences.create((PwnFilterBukkitPlugin) p);
-        } else {
+        this.plugin = p;
+        setup();
+    }
+
+    protected void setup(){
+        if(plugin instanceof PwnFilterBukkitPlugin){ //avoid testing
+            audiences = BukkitAudiences.create((Plugin) this.plugin);
+        } else  {
             audiences = null;
         }
     }
+
 
     public BukkitPlayer getAuthorById(final UUID u) {
         /* Not sure if this is the best way of doing this, but we need to make

@@ -27,6 +27,7 @@ import com.pwn9.filter.bukkit.config.BukkitConfig;
 import com.pwn9.filter.engine.FilterService;
 import com.pwn9.filter.engine.rules.action.minecraft.MinecraftAction;
 import com.pwn9.filter.engine.rules.action.targeted.TargetedAction;
+import com.pwn9.filter.minecraft.api.MinecraftAPI;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -59,11 +60,13 @@ public class PwnFilterPlayerListenerTest {
     private Configuration testConfig;
     private FilterService filterService;
     private PwnFilterPlayerListener playerListener;
+    private MinecraftAPI api;
 
     @Before
     public void setUp() throws InvalidConfigurationException {
         File rulesDir = new File(getClass().getResource("/rules").getFile());
         PwnFilterPlugin testPlugin = new MockPlugin();
+        api = testPlugin.getApi();
         playerListener = new PwnFilterPlayerListener(testPlugin);
         filterService = testPlugin.getFilterService();
         filterService.getConfig().setRulesDir(rulesDir);
@@ -96,7 +99,7 @@ public class PwnFilterPlayerListenerTest {
     @Test
     public void testGlobalMuteCancelsMessage() throws Exception {
         String input = "Test Message";
-        BukkitConfig.setGlobalMute(true);
+        api.setMutStatus(true);
         chatEvent = new AsyncPlayerChatEvent(true, mockPlayer, input, new HashSet<>());
         playerListener.loadRuleChain("blank.txt");
         playerListener.onPlayerChat(chatEvent);

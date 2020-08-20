@@ -21,12 +21,9 @@
 package com.pwn9.filter.engine.rules.action.targeted;
 
 import com.google.common.collect.ImmutableList;
-import com.pwn9.filter.engine.FilterService;
 import com.pwn9.filter.engine.api.Action;
-import com.pwn9.filter.engine.api.FilterContext;
 import com.pwn9.filter.engine.rules.action.InvalidActionException;
 import com.pwn9.filter.util.PwnFormatter;
-import com.pwn9.filter.util.tag.TagRegistry;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -37,7 +34,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
