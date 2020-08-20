@@ -21,6 +21,8 @@
 package com.pwn9.filter;
 
 import com.avaje.ebean.EbeanServer;
+import com.google.common.collect.MapMaker;
+import com.pwn9.filter.bukkit.PwnFilterBukkitPlugin;
 import com.pwn9.filter.bukkit.PwnFilterPlugin;
 import com.pwn9.filter.engine.FilterService;
 import com.pwn9.filter.engine.api.AuthorService;
@@ -41,11 +43,12 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Logger;
 
 public class MockPlugin implements PwnFilterPlugin, Plugin {
 
-    private final MockAudienceProvider audienceProvider = new MockAudienceProvider();
+    public static final ConcurrentMap<UUID, String> lastMessage = new MapMaker().concurrencyLevel(2).weakKeys().makeMap();
     private final FilterService filterService = new FilterService();
     private final MinecraftAPI minecraftAPI = new MockMinecraftAPI();
     private final static AuthorService authorService = new AuthorService() {
@@ -87,6 +90,17 @@ public class MockPlugin implements PwnFilterPlugin, Plugin {
     @Override
     public boolean configurePlugin() {
         return true;
+    }
+
+    @Override
+    public boolean checkRecentMessage(UUID uuid, String string) {
+        return (lastMessage.containsKey(uuid) && PwnFilterBukkitPlugin.lastMessage.get(uuid).equals(string));
+
+    }
+
+    @Override
+    public void addRecentMessage(UUID uuid, String string) {
+        lastMessage.put(uuid,string);
     }
 
     @Override

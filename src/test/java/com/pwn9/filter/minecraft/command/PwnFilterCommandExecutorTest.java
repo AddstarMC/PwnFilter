@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import java.util.Queue;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Created for use for the Add5tar MC Minecraft server
@@ -22,7 +22,7 @@ public class PwnFilterCommandExecutorTest {
 
 
     @Before
-    public void Setup(){
+    public void setup(){
         MockMinecraftAPI api = (MockMinecraftAPI) testPlugin.getApi();
         api.addPlayer(testPlayer1);
         api.addPlayer(testPlayer2);
@@ -30,8 +30,8 @@ public class PwnFilterCommandExecutorTest {
     }
 
     @Test
-    public void PwnClearScreenTest(){
-        PwnClearScreen command = new PwnClearScreen(testPlugin);
+    public void pwnClearScreenTest(){
+        PwnFilterCommandExecutor command = new PwnClearScreen(testPlugin);
         command.onCommand(testPlayer1,"","","","");
         Queue<String> forOne = testPlayer1.getAllMessages();
         Queue<String> forTwo = testPlayer2.getAllMessages();

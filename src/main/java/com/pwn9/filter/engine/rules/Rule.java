@@ -25,7 +25,6 @@ import com.pwn9.filter.engine.api.Action;
 import com.pwn9.filter.engine.api.FilterContext;
 import com.pwn9.filter.engine.rules.chain.ChainEntry;
 import com.pwn9.filter.util.LimitedRegexCharSequence;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -277,7 +276,9 @@ public class Rule implements ChainEntry {
      * @return a boolean.
      */
     public boolean addAction(Action a) {
-        return a != null && actions.add(a);
+        if (a == null) return false;
+        actions.add(a);
+        return true;
     }
 
     /**

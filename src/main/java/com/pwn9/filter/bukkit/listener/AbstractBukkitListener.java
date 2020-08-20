@@ -107,7 +107,8 @@ abstract class AbstractBukkitListener implements FilterClient, Listener {
         }
     }
 
-    boolean checkIfSpam(MessageAuthor minecraftPlayer, String message, Cancellable event){
+    @SuppressWarnings("WeakerAccess")
+    protected boolean checkIfSpam(MessageAuthor minecraftPlayer, String message, Cancellable event){
         if (plugin.checkRecentMessage(minecraftPlayer.getId(),message)) {
             event.setCancelled(true);
             minecraftPlayer.sendMessage(TextComponent.of("[PwnFilter] ").color(NamedTextColor.DARK_RED)
