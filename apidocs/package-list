@@ -1,0 +1,8 @@
+com.pwn9.filter
+com.pwn9.filter.engine
+com.pwn9.filter.engine.api
+com.pwn9.filter.engine.rules
+com.pwn9.filter.engine.rules.action
+com.pwn9.filter.engine.rules.action.targeted
+com.pwn9.filter.engine.rules.chain
+com.pwn9.filter.minecraft.api
